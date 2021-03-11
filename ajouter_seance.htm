@@ -1,0 +1,54 @@
+<html>
+    <head>
+        <script src="https://www.gstatic.com/firebasejs/5.0.3/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/5.0.3/firebase-firestore.js"></script>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+
+        <h1>Ajouter une séance</h1>
+
+        <form id="add-date-form">
+               
+                <label for="multiDay">Stage</label>
+                <input type="checkbox" onclick="toggleMultiDay()" name="multiDay" placeholder="Stage"><br>
+                <input type="date" name="startDate" placeholder="Date de début AAAA-MM-JJ">
+                <input type="date" name="endDate" placeholder="Date de fin AAAA-MM-JJ" style="display:none"><br>
+                <input type="time" name="startTime" placeholder="Heure de début 00:00">
+                <input type="time" name="endTime" placeholder="Heure de fin 00:00">
+                <input type="button" name="add30min" onclick="add30()" value="Ajouter 30 minutes">
+                <br>
+                <input type="text" name="location" placeholder="Lieu"><br>
+                <input type="number" name="minAge" placeholder="Âge minimum">
+                <input type="number" name="maxAge" placeholder="Âge maximum"><br>
+                <input type="number" name="maxUsers" placeholder="Nb max"><br>
+                <input type="text" name="teacher" placeholder="Moniteur">
+                <button>Ajouter la séance</button>
+        </form>
+    
+        <div id="dates">
+            <ul id="date-list"></ul>
+        </div>
+
+    
+
+        <script>
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        var firebaseConfig = {
+            apiKey: "AIzaSyCA9VxBlnMtY1MM7CKDdG2DRzqJ1WaBqZs",
+            authDomain: "caf-faverges.firebaseapp.com",
+            projectId: "caf-faverges",
+            storageBucket: "caf-faverges.appspot.com",
+            messagingSenderId: "512420378346",
+            appId: "1:512420378346:web:58107d9f9708c59ff08993",
+            measurementId: "G-L8P7NSRX6N"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+            db.settings({ timestampsInSnapshots: true }); 
+        </script>
+        <script src="add_date.js"></script>
+    </body>
+</html>
