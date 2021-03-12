@@ -6,6 +6,17 @@ li{
     list-style: none;
 }
 
+#addSession{
+    display: none;
+}
+
+.disabled{
+    background: rgb(129, 129, 129);
+    opacity: 0.2;
+    pointer-events: none;
+    display: none;
+}
+
 /* Dropdown button on hover & focus */
 .dropButton:hover, .dropButton:focus {
 

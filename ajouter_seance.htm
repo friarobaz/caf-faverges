@@ -2,33 +2,76 @@
     <head>
         <script src="https://www.gstatic.com/firebasejs/5.0.3/firebase-app.js"></script>
         <script src="https://www.gstatic.com/firebasejs/5.0.3/firebase-firestore.js"></script>
+        <script src="https://unpkg.com/dayjs@1.8.21/dayjs.min.js"></script>
+        <script src="https://unpkg.com/dayjs@1.8.21/locale/fr.js"></script>
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
+        <div id="addSession">
+            <h1>Ajouter une séance</h1>
+            <form id="add-session-form">
+                    <label for="multiDay">Stage</label>
+                    <input type="checkbox" onclick="toggleMultiDay()" name="multiDay" placeholder="Stage">
+                    <br>
+                    <label for="startDate">Date :</label>
+                    <input type="date" name="startDate" placeholder="Date de début AAAA-MM-JJ" onchange="displayDuration()">
+                    <div id="date">
+                        <label for="endDate">Date de fin :</label>
+                        <input type="date" name="endDate" placeholder="Date de fin AAAA-MM-JJ" onchange="displayDuration()" >
+                        <input type="button" onclick="addDay(), displayDuration()" value="Ajouter 1 jour" name="add1day" >
+                        <br>
+                        Durée : <span id="durationDays">0</span> 
+                    </div>
 
-        <h1>Ajouter une séance</h1>
-
-        <form id="add-date-form">
-               
-                <label for="multiDay">Stage</label>
-                <input type="checkbox" onclick="toggleMultiDay()" name="multiDay" placeholder="Stage"><br>
-                <input type="date" name="startDate" placeholder="Date de début AAAA-MM-JJ">
-                <input type="date" name="endDate" placeholder="Date de fin AAAA-MM-JJ" style="display:none"><br>
-                <input type="time" name="startTime" placeholder="Heure de début 00:00">
-                <input type="time" name="endTime" placeholder="Heure de fin 00:00">
-                <input type="button" name="add30min" onclick="add30()" value="Ajouter 30 minutes">
-                <br>
-                <input type="text" name="location" placeholder="Lieu"><br>
-                <input type="number" name="minAge" placeholder="Âge minimum">
-                <input type="number" name="maxAge" placeholder="Âge maximum"><br>
-                <input type="number" name="maxUsers" placeholder="Nb max"><br>
-                <input type="text" name="teacher" placeholder="Moniteur">
-                <button>Ajouter la séance</button>
-        </form>
-    
-        <div id="dates">
-            <ul id="date-list"></ul>
+                    <div id="time">
+                        <input type="time" name="startTime" placeholder="Heure de début 00:00" value="10:00" onchange="matchStartTime(); displayDuration()">
+                        <input type="time" name="endTime" placeholder="Heure de fin 00:00" value="10:00" onchange="displayDuration()">
+                        <input type="button" onclick="addMinutes()" value="Ajouter 30 minutes" name="add30min">
+                        <br>
+                        Durée : <span id="duration">0</span> 
+                    </div>
+                    <br>
+                    <label for="location">Lieu :</label>
+                    <select name="location"></select>
+                    <br>
+                    <label for="group">Groupe :</label>
+                    <select name="group" onchange="toggleAges()"></select>
+                    <br>
+                    <div id="ages">
+                        <label for="minAge, maxAge">Âges :</label>
+                        <input type="number" name="minAge" placeholder="Âge minimum">
+                        <input type="number" name="maxAge" placeholder="Âge maximum">
+                    </div>
+                    <br>
+                    <div id=maxUsers>
+                        <label for="maxUsers">Nombre de personnes max :</label>
+                        <input type="number" name="maxUsers" placeholder="Nb max" value="12">
+                    </div>
+                    <br>
+                    <label for="teacher">Moniteur :</label>
+                    <select name="teacher"></select>
+                    <br><br>
+                    <button>Ajouter la séance</button>
+            </form>
+            <div id="sessions">
+                <h1>Toutes les séances</h1>
+                <ul id="session-list"></ul>
+            </div>
         </div>
+        
+        <div id="nameSelection">
+            <h1>Sélectionner un nom</h1>
+            <label for="name">Trier :</label>
+            <input type="text" id="nameInput" onkeyup="sortNames()" placeholder="Nom" name="name">
+            <ul id="nameList"></ul>
+        </div>
+        <div id="sessionSelection" style="display: none;">
+            <h1 id="selectedName"></h1>
+            <button onclick="reset()">Retour</button><br><br>
+            <div>Sélectionner des séances</div>
+            <ul id="upcomingSessions"></ul>
+        </div>
+        
 
     
 
@@ -49,6 +92,6 @@
         const db = firebase.firestore();
             db.settings({ timestampsInSnapshots: true }); 
         </script>
-        <script src="add_date.js"></script>
+        <script src="add_session.js"></script>
     </body>
 </html>
