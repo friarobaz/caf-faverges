@@ -77,16 +77,30 @@ function getUpcomingSession(id){
             if (timeLeft>0) {
                 let li = document.createElement("li");
                 let a = document.createElement('a');
+                let span = document.createElement('span');
+                span.innerText = " Annuler";
                 a.innerText = dayjs(new Date(doc.data().startTimestamp)).format("dddd D MMMM H[h]mm") + " à " + doc.data().location;
                 a.href="#";
                 li.setAttribute('id', doc.id);
                 li.appendChild(a); 
+                li.appendChild(span);
                 upcomingSessions.appendChild(li);
-                li.addEventListener('click', (e) => {
+                //if you click on session
+                a.addEventListener('click', (e) => {
                     e.stopPropagation();
                     selectedSessions.push(doc.id);
+                    e.path[1].style.background = 'chartreuse';
                     selectedSessions = unique(selectedSessions);
                     console.log(selectedSessions);
+                });
+                //if you click on ANNULER
+                span.addEventListener('click', (e) => {
+                    e.stopPropagation();                    
+                    const index = selectedSessions.indexOf(doc.id)
+                    if (index > -1) {
+                        selectedSessions.splice(index, 1);
+                        e.path[1].style.background = '';
+                      }
                 });//end click
             }//end if timeLeft
         });//end forEach
@@ -297,8 +311,23 @@ function reset(){
     document.getElementById('sessionSelection').style.display = 'none';
     document.getElementById("nameInput").focus();
 }
-/* function myDate(date){
-    const options = { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric'};
-    return date.toDate().toLocaleDateString('fr-FR', options)
-} */
 
+function submit(){
+    if (confirm("Valider l'inscription ?")) {
+        var user = db.collection("users").doc(selectedName);
+        user.get().then((doc) => {
+            let oldUserSessions = [];
+            if (doc.data().sessions) {
+                oldUserSessions = doc.data().sessions;
+            }
+            let oldAndNew = oldUserSessions.concat(selectedSessions);
+            oldAndNew = unique(oldAndNew);
+            console.log(oldAndNew);
+            return user.update({
+                sessions: oldAndNew
+            })
+        }).catch((error) => {
+            console.log("Error getting document:", error);
+        });
+    }//end if  
+}
