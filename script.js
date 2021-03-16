@@ -9,7 +9,7 @@ const ACTIONS = [
     {name: "Créer une séance", function: createSession}, //0
     {name: "Modifier une séance", function: modifySession}, //1
     {name: "Voir les statistiques de l'élève", function: viewUserStats}, //2
-    {name: "S'inscrire à une séance", function: signUp}, //3
+    {name: "S'inscrire à des séances", function: signUp}, //3
     {name: "Voir les statistiques globales", function: viewGlobalStats}, //4
     {name: "Facturer", function: bill}, //5
 ];
@@ -21,6 +21,7 @@ let currentAction = null; //index
 let currentPage = 0;
 let lastPage = 0;
 let forward = true;
+let selectedSessions = [];
 //####################################################################################################################
 
 displayPage(0);
@@ -317,7 +318,7 @@ function createActionMenu(target){
 function actionPage(target){
     console.log("Welcome to the action page");
     console.log("action selected: "+ACTIONS[currentAction].name);
-    ACTIONS[currentAction].function();
+    ACTIONS[currentAction].function(target);
 }
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@--- ACTIONS ---@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -334,48 +335,55 @@ function viewUserStats(){
 
 }
 //========================================= ACTION 4 (signup) =============================
-function signUp(){
+function signUp(target){
     console.log("Signing up");
-
+    createUpcomingSessionMenu(target)
 }
-function getUpcomingSession(id){
-    //populate upcoming session
-    let upcomingSessions = document.getElementById("upcomingSessions");
-    upcomingSessions.textContent ='';
+function createUpcomingSessionMenu(target){ //ADD AGE RESTRICTION
+    function addSessionToList (doc, ul){
+        let a = document.createElement('a');
+        a.innerText = dayjs(new Date(doc.data().startTimestamp)).format("dddd D MMMM H[h]mm") + " à " + doc.data().location;
+        a.href = "#";
+        let checkbox = document.createElement('input');
+        checkbox.setAttribute('type', 'checkbox');
+        let li = document.createElement('li');
+        li.setAttribute('id', doc.id);
+        li.appendChild(a); 
+        li.appendChild(checkbox);
+        ul.appendChild(li);
+        checkbox.addEventListener('change', (e) => {
+            e.stopPropagation();
+            if (e.path[0].checked) {
+              e.path[1].style.background = 'chartreuse';
+              selectedSessions.push(doc);
+              //selectedSessions = unique(selectedSessions); //inutile 
+            } else {
+                e.path[1].style.background = '';
+                const index = selectedSessions.indexOf(doc)
+                if (index > -1) {
+                    selectedSessions.splice(index, 1);
+                    e.path[1].style.background = '';
+                }
+            }
+            console.log(selectedSessions);
+        });
+    }
     db.collection('sessions').orderBy('startTimestamp').get().then(snapshot => {
+        var ul = document.createElement('ul');
         snapshot.docs.forEach(doc => {
-            let timeLeft = doc.data().startTimestamp - Date.now();
-            if (timeLeft>0) {
-                let li = document.createElement("li");
-                let a = document.createElement('a');
-                let span = document.createElement('span');
-                span.innerText = " Annuler";
-                a.innerText = dayjs(new Date(doc.data().startTimestamp)).format("dddd D MMMM H[h]mm") + " à " + doc.data().location;
-                a.href="#";
-                li.setAttribute('id', doc.id);
-                li.appendChild(a); 
-                li.appendChild(span);
-                upcomingSessions.appendChild(li);
-                //if you click on session
-                a.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    selectedSessions.push(doc.id);
-                    e.path[1].style.background = 'chartreuse';
-                    selectedSessions = unique(selectedSessions);
-                    console.log(selectedSessions);
-                });
-                //if you click on ANNULER
-                span.addEventListener('click', (e) => {
-                    e.stopPropagation();                    
-                    const index = selectedSessions.indexOf(doc.id)
-                    if (index > -1) {
-                        selectedSessions.splice(index, 1);
-                        e.path[1].style.background = '';
-                      }
-                });//end click
-            }//end if timeLeft
+            if (doc.data().startTimestamp>Date.now()) { //if session is in future
+                addSessionToList(doc,ul);
+            }//end if future
         });//end forEach
-    });
+        target.appendChild(ul);
+        let button = document.createElement('button');
+        button.innerText = "Valider";
+        target.appendChild(button);
+        button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            console.log("clicked");
+        });//end click button
+    });//end snapshot, don't put anything after
 }
 //========================================= ACTION 5 (view global stats) =============================
 function viewGlobalStats(){
