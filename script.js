@@ -1,3 +1,4 @@
+dayjs.locale('fr');
 const TEACHERS = ['Jelena', 'Jules'];
 const USER_TYPES = [ // YOU CAN CHANGE NAMES BUT KEEP POSITIONS
     {name: "Administrateur", password: "admin", userSelectionNeeded: false}, //can do all actions, keep at position 0 in array
@@ -21,7 +22,7 @@ let currentAction = null; //index
 let currentPage = 0;
 let lastPage = 0;
 let forward = true;
-let selectedSessions = [];
+let selectedSessions = [];//array of doc objects
 //####################################################################################################################
 
 displayPage(0);
@@ -33,7 +34,7 @@ function displayPage(pageNumber){
     console.log("#######################################")
     console.log(`Current page: ${currentPage} (from ${lastPage}) forward: ${forward}`);
     console.log(`Current userType: ${currentUserType}`);
-    if (currentUser) {
+    if (currentUserType == 1 && currentUser) {
         console.log(`Current user: ${currentUser.data().firstName} ${currentUser.data().lastName}`);
         console.log(`Id: ${currentUser.id}`);
     }else{console.log("No user selected")};
@@ -265,6 +266,7 @@ function actionSelection(target){
         document.getElementById("actionMenu").remove();
     }
     createActionMenu(target);
+    createSignedUpSessionMenu(target);
 }
 function createActionMenu(target){ 
     function addActionToList(actionIndex, ul){
@@ -314,6 +316,31 @@ function createActionMenu(target){
     target.appendChild(container);
     authorizedActions(currentUserType).forEach(actionIndex => addActionToList(actionIndex, ul));
 }
+function createSignedUpSessionMenu(target){
+    function addSessionToList (session, ul){
+        let a = document.createElement('a');
+        a.innerText = title(session);
+        a.href = "#";
+        var li = document.createElement('li');
+        li.setAttribute('id', session.id);
+        li.appendChild(a); 
+        ul.appendChild(li);
+        li.addEventListener('click', (e) => {
+            e.stopPropagation();
+            console.log(session.data().startDate);
+        });
+    }
+    let txt = document.createElement('div');
+    txt.innerText = `Séances auxquelles ${currentUser.data().firstName} est inscrit :`;
+    target.appendChild(txt);
+    var ul = document.createElement('ul');
+    db.collection("sessions").where(`users.${currentUser.id}`, "==", "signed up").get().then(snapshot => {
+        snapshot.docs.forEach(session => {
+            addSessionToList(session, ul);
+        });//end forEach
+        target.appendChild(ul);
+    });
+}
 //========================================= PAGE 5 (action page) =============================
 function actionPage(target){
     console.log("Welcome to the action page");
@@ -336,30 +363,33 @@ function viewUserStats(){
 }
 //========================================= ACTION 4 (signup) =============================
 function signUp(target){
-    console.log("Signing up");
+    selectedSessions = []; 
     createUpcomingSessionMenu(target)
 }
+
 function createUpcomingSessionMenu(target){ //ADD AGE RESTRICTION
-    function addSessionToList (doc, ul){
+    function addSessionToList (session, ul){
         let a = document.createElement('a');
-        a.innerText = dayjs(new Date(doc.data().startTimestamp)).format("dddd D MMMM H[h]mm") + " à " + doc.data().location;
+        a.innerText = title(session);
         a.href = "#";
         let checkbox = document.createElement('input');
         checkbox.setAttribute('type', 'checkbox');
-        let li = document.createElement('li');
-        li.setAttribute('id', doc.id);
+        checkbox.checked = false;
+        var li = document.createElement('li');
+        li.setAttribute('id', session.id);
         li.appendChild(a); 
         li.appendChild(checkbox);
         ul.appendChild(li);
+
         checkbox.addEventListener('change', (e) => {
             e.stopPropagation();
             if (e.path[0].checked) {
-              e.path[1].style.background = 'chartreuse';
-              selectedSessions.push(doc);
-              //selectedSessions = unique(selectedSessions); //inutile 
+                li.style.background = 'chartreuse';
+                selectedSessions.push(session);
+                //selectedSessions = unique(selectedSessions); //inutile 
             } else {
                 e.path[1].style.background = '';
-                const index = selectedSessions.indexOf(doc)
+                const index = selectedSessions.indexOf(session)
                 if (index > -1) {
                     selectedSessions.splice(index, 1);
                     e.path[1].style.background = '';
@@ -381,9 +411,35 @@ function createUpcomingSessionMenu(target){ //ADD AGE RESTRICTION
         target.appendChild(button);
         button.addEventListener('click', (e) => {
             e.stopPropagation();
-            console.log("clicked");
+            signUpUserToSelectedSessions(currentUser)
         });//end click button
     });//end snapshot, don't put anything after
+}
+function signUpUserToSelectedSessions(user){
+    if (confirm("Valider l'inscription ?")){
+        selectedSessions.forEach(session=>{  
+            changeStatus(user,session, 'signed up');
+        });//end for each
+    }//end if  
+}
+function changeStatus(user, session, status){
+    console.log(`Changing status of ${currentUser.data().firstName} to --${status}-- on ${session.data().startDate}`);
+    //change status of USERS object in SESSION document
+    return db.collection('sessions').doc(session.id).update({
+        [`users.${user.id}`]: status
+    })
+    //change status of SESSIONS object in USER document
+    .then(()=>{
+        db.collection('users').doc(user.id).update({
+            [`sessions.${session.id}`]: status
+        })
+    })
+    .then(() => {
+        console.log("Document successfully updated!");
+    })
+    .catch((error) => {
+        console.error("Error updating document: ", error);
+    });
 }
 //========================================= ACTION 5 (view global stats) =============================
 function viewGlobalStats(){
@@ -421,3 +477,15 @@ function hideChildren(target){ // unused
 function unique(array) { // unused
     return Array.from(new Set(array));
 }
+function title(session){
+    return dayjs(new Date(session.data().startTimestamp)).format("dddd D MMMM H[h]mm")
+    + " à " + session.data().location
+    + " avec " + session.data().teacher;
+}
+
+
+// TO DO
+/*
+
+fix user issue when not parent
+*/
