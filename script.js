@@ -330,24 +330,30 @@ function createSignedUpSessionMenu(target){
             console.log(session.data().startDate);
         });
     }
-    let txt = document.createElement('div');
-    txt.innerText = `Séances auxquelles ${currentUser.data().firstName} est inscrit :`;
-    target.appendChild(txt);
-    var ul = document.createElement('ul');
     db.collection("sessions").where(`users.${currentUser.id}`, "==", "signed up").get().then(snapshot => {
-        snapshot.docs.forEach(session => {
-            addSessionToList(session, ul);
-        });//end forEach
-        target.appendChild(ul);
+        if(snapshot.size){
+            let txt = document.createElement('div');
+            txt.innerText = `Séances auxquelles ${currentUser.data().firstName} est inscrit(e) :`;
+            target.appendChild(txt);
+            var ul = document.createElement('ul');
+            snapshot.docs.forEach(session => {
+                addSessionToList(session, ul);
+            });//end forEach
+            target.appendChild(ul);
+        }  
     });
 }
+
 //========================================= PAGE 5 (action page) =============================
 function actionPage(target){
     console.log("Welcome to the action page");
     console.log("action selected: "+ACTIONS[currentAction].name);
     ACTIONS[currentAction].function(target);
 }
-//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@--- ACTIONS ---@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@--- ACTIONS ---@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
 
 //========================================= ACTION 1 (create session) =============================
 function createSession(){
@@ -422,6 +428,16 @@ function signUpUserToSelectedSessions(user){
         });//end for each
     }//end if  
 }
+
+//========================================= ACTION 5 (view global stats) =============================
+function viewGlobalStats(){
+
+}
+//========================================= ACTION 6 (bill) =============================
+function bill(){
+    
+}
+//########################################## GENERIC FUNCTIONS ######################################
 function changeStatus(user, session, status){
     console.log(`Changing status of ${currentUser.data().firstName} to --${status}-- on ${session.data().startDate}`);
     //change status of USERS object in SESSION document
@@ -441,16 +457,6 @@ function changeStatus(user, session, status){
         console.error("Error updating document: ", error);
     });
 }
-//========================================= ACTION 5 (view global stats) =============================
-function viewGlobalStats(){
-
-}
-//========================================= ACTION 6 (bill) =============================
-function bill(){
-    
-}
-//########################################## GENERIC FUNCTIONS ######################################
-
 function createBackButton(container){
     
     if (document.getElementById('backButton')) {
@@ -482,7 +488,21 @@ function title(session){
     + " à " + session.data().location
     + " avec " + session.data().teacher;
 }
-
+function getSessions(user, status){
+    let resultArray = [];
+    db.collection('sessions').where(`users.${user.id}`, "==", status).get().then(snapshot => {
+        if (snapshot.size) {
+            snapshot.docs.forEach(session => {
+            resultArray.push(session);
+            });//end forEach
+            console.log (`${snapshot.size} sessions found for ${user.data().firstName} with status --${status}--`);
+            console.log(resultArray);
+        }else{
+            console.log (`No session for ${user.data().firstName} with status --${status}--`);
+        }
+        return resultArray;
+    });//end snapshot, don't put anything after
+}
 
 // TO DO
 /*
