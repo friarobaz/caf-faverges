@@ -72,7 +72,7 @@ function createUserTypeMenu(target){
     }
     let container = document.createElement('div');
     container.setAttribute('id', "userTypeMenu");
-    let txt = document.createElement('p');
+    let txt = document.createElement('h1');
     txt.innerText = "Vous êtes qui ?";
     let ul = document.createElement('ul');
     ul.setAttribute('id', "userTypeList");
@@ -247,7 +247,7 @@ function sortNames() {
   
     // Loop through all list items, and hide those who don't match the search query
     for (i = 0; i < names.length; i++) {
-      a = names[i].getElementsByTagName("a")[0];
+      a = names[i].getElementsByTagName("button")[0];
       txtValue = a.textContent || a.innerText;
       if (txtValue.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").indexOf(filter) > -1) {
         names[i].style.display = "";
