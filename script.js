@@ -55,11 +55,10 @@ function userTypeSelection(target){
 function createUserTypeMenu(target){
     function addUserTypeToList (userTypeIndex, ul){
         let li = document.createElement('li');
-        let a = document.createElement('a');
-        a.innerText = USER_TYPES[userTypeIndex].name;
-        a.href = "#";
+        let button = document.createElement('button');
+        button.innerText = USER_TYPES[userTypeIndex].name;
         li.setAttribute('id', "userType_"+userTypeIndex);
-        li.appendChild(a);
+        li.appendChild(button);
         ul.appendChild(li);
         li.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -221,9 +220,9 @@ function createNameList(target){
     db.collection('users').orderBy('firstName').get().then(snapshot => {
         snapshot.docs.forEach(doc => {
             let li = document.createElement("li");
-            let a = document.createElement('a');
+            let a = document.createElement('button');
             a.innerText = doc.data().firstName +" "+doc.data().lastName;
-            a.href="#";
+            //a.href="#";
             li.setAttribute('id', doc.id);
             li.appendChild(a); 
             ul.appendChild(li);
