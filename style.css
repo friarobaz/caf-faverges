@@ -1,3 +1,40 @@
+*{
+    box-sizing: border-box;
+}
+
+body{
+    margin: 0;
+    padding: 20px;
+    background: rgb(145, 233, 255);
+    font-size: 16px;
+}
+section{
+    
+}
+h1{
+    font-size: 3em;
+}
+
+.session{
+    background: yellow;
+    margin-bottom: 2em;
+    
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.session .top{
+    background: yellowgreen;
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5em;
+}
+
+.session .bottom{
+    background: green;
+    padding: 0.5em;
+}
+
 button{
     cursor: pointer;
 }
@@ -5,35 +42,3 @@ button{
 li{
     list-style: none;
 }
-
-#addSession{
-    display: ;
-}
-
-.disabled{
-    background: rgb(129, 129, 129);
-    opacity: 0.2;
-    pointer-events: none;
-    display: none;
-}
-
-/* Dropdown button on hover & focus */
-.dropButton:hover, .dropButton:focus {
-
-}
-
-/* The container <div> - needed to position the dropdown content */
- .dropdown {
-position: relative;
-display: inline-block;
-}
-
-/* Dropdown Content (Hidden by Default) */
-.dropdown-content {
-display: none;
-position: absolute;
-z-index: 1;
-}
-
-/* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
-.show {display:block;}

@@ -73,7 +73,7 @@ function createUserTypeMenu(target){
     }
     let container = document.createElement('div');
     container.setAttribute('id', "userTypeMenu");
-    let txt = document.createElement('div');
+    let txt = document.createElement('p');
     txt.innerText = "Vous êtes qui ?";
     let ul = document.createElement('ul');
     ul.setAttribute('id', "userTypeList");
@@ -266,7 +266,7 @@ function actionSelection(target){
         document.getElementById("actionMenu").remove();
     }
     createActionMenu(target);
-    createSignedUpSessionMenu(target);
+    createSignedUpSessionMenu(target, currentUser);
 }
 function createActionMenu(target){ 
     function addActionToList(actionIndex, ul){
@@ -307,16 +307,16 @@ function createActionMenu(target){
     }
     let container = document.createElement('div');
     container.setAttribute('id', "actionMenu");
-    let txt = document.createElement('div');
-    txt.innerText = "Voici les actions possible en tant que "+USER_TYPES[currentUserType].name;
+    /* let txt = document.createElement('div');
+    txt.innerText = "Voici les actions possible en tant que "+USER_TYPES[currentUserType].name; */
     let ul = document.createElement('ul');
     ul.setAttribute('id', "authorizedActionList");
-    container.appendChild(txt); //display text
+    /* container.appendChild(txt); //display text */
     container.appendChild(ul); //display action list
     target.appendChild(container);
     authorizedActions(currentUserType).forEach(actionIndex => addActionToList(actionIndex, ul));
 }
-function createSignedUpSessionMenu(target){
+function createSignedUpSessionMenu(target, user){
     function addSessionToList (session, ul){
         let a = document.createElement('a');
         a.innerText = title(session);
@@ -328,20 +328,28 @@ function createSignedUpSessionMenu(target){
         li.addEventListener('click', (e) => {
             e.stopPropagation();
             console.log(session.data().startDate);
+            console.log(nbOfStatusInSession("signed up", session));
         });
     }
-    db.collection("sessions").where(`users.${currentUser.id}`, "==", "signed up").get().then(snapshot => {
-        if(snapshot.size){
-            let txt = document.createElement('div');
-            txt.innerText = `Séances auxquelles ${currentUser.data().firstName} est inscrit(e) :`;
+    db.collection('sessions').where(`users.${user.id}`, "==", 'signed up').get().then(snapshot => {
+        if (snapshot.size) {
+            console.log (`${snapshot.size} sessions found for ${user.data().firstName} with status --${status}--`);
+            let txt = document.createElement('p');
+            txt.innerText = `Séances auxquelles ${user.data().firstName} est inscrit(e) :`;
             target.appendChild(txt);
             var ul = document.createElement('ul');
             snapshot.docs.forEach(session => {
-                addSessionToList(session, ul);
+                //addSessionToList(session, ul);
+                displaySession(session, ul);
             });//end forEach
             target.appendChild(ul);
-        }  
-    });
+        }else{
+            console.log (`No session for ${user.data().firstName} with status --${status}--`);
+            let txt = document.createElement('div');
+            txt.innerText = `${user.data().firstName} n'est inscrit(e) sur aucune séance pour l'instant.`;
+            target.appendChild(txt);
+        }
+    });//end snapshot, don't put anything after
 }
 
 //========================================= PAGE 5 (action page) =============================
@@ -488,22 +496,85 @@ function title(session){
     + " à " + session.data().location
     + " avec " + session.data().teacher;
 }
-function getSessions(user, status){
-    let resultArray = [];
-    db.collection('sessions').where(`users.${user.id}`, "==", status).get().then(snapshot => {
-        if (snapshot.size) {
-            snapshot.docs.forEach(session => {
-            resultArray.push(session);
-            });//end forEach
-            console.log (`${snapshot.size} sessions found for ${user.data().firstName} with status --${status}--`);
-            console.log(resultArray);
-        }else{
-            console.log (`No session for ${user.data().firstName} with status --${status}--`);
-        }
-        return resultArray;
-    });//end snapshot, don't put anything after
+function displaySession(session, ul, signUp, unSignUp, modify, cancel){
+    let s = session.data();
+    let signUps = nbOfStatusInSession("signed up", session);
+    let li = document.createElement('div');
+    li.classList.add("session");
+    let top = document.createElement('div');
+    top.classList.add("top");
+    let bottom = document.createElement('div');
+    bottom.classList.add("bottom");
+
+    let time = document.createElement('div');
+    time.innerText = `${s.startTime} à ${s.endTime}` ;
+
+    let location = document.createElement('div');
+    location.innerText = s.location;
+
+    let spotsLeft = document.createElement('div');
+    spotsLeft.innerText = `(${signUps}/${s.maxUsers})`;
+
+    let age = document.createElement('div');
+    age.innerText = `Âges : ${s.minAge}-${s.maxAge} ans`;
+
+    let teacher = document.createElement('div');
+    teacher.innerText = `Moniteur : ${s.teacher}`;
+
+    let spots = document.createElement('div');
+    spots.innerText = `Places : ${s.maxUsers}`;
+
+    let description = document.createElement('div');
+    description.innerText = `${s.description}`;
+
+    //user list
+    let usersContainer = document.createElement('div');
+    let usersTitle = document.createElement('div');
+    usersTitle.innerText = `Inscrits : (${signUps})`;
+    let userList = document.createElement('ul');
+    //POPULATE NAME LIST
+
+    let signUpButton = document.createElement('button');
+    signUpButton.innerText = "S'inscrire";
+
+    let unSignUpButton = document.createElement('button');
+    unSignUpButton.innerText = "Se désinscrire";
+
+    let modifyButton = document.createElement('button');
+    modifyButton.innerText = "Modifier";
+
+    let cancelButton = document.createElement('button');
+    cancelButton.innerText = "Annuler";
+
+    top.appendChild(time);
+    top.appendChild(location);
+    top.appendChild(spotsLeft);
+    bottom.appendChild(age);
+    bottom.appendChild(teacher);
+    bottom.appendChild(spots);
+    if (s.description) {
+        bottom.appendChild(description);
+    }
+    bottom.appendChild(signUpButton);
+    bottom.appendChild(unSignUpButton);
+    bottom.appendChild(modifyButton);
+    bottom.appendChild(cancelButton);
+    usersContainer.appendChild(usersTitle);
+    usersContainer.appendChild(userList);
+    bottom.appendChild(usersContainer);
+    li.appendChild(top);
+    li.appendChild(bottom);
+    ul.appendChild(li);
+    
+    li.addEventListener('click', (e) => {
+        e.stopPropagation();
+        console.log(session.data().startDate);
+    });
 }
 
+function nbOfStatusInSession(status, session){
+    return Object.values(session.data().users).map(x => x = status).length;
+}
 // TO DO
 /*
 
