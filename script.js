@@ -313,19 +313,30 @@ function createActionMenu(target){
     authorizedActions(currentUserType).forEach(actionIndex => addActionToList(actionIndex, ul));
 }
 function createSignedUpSessionMenu(target, user){
-    db.collection('sessions').where(`users.${user.id}`, "==", 'signed up').get().then(snapshot => {
+    db.collection('sessions').orderBy('startTimestamp').get().then(snapshot => {
         if (snapshot.size) {
             console.log (`${snapshot.size} sessions found for ${user.data().firstName} with status --${status}--`);
             let txt = document.createElement('p');
             txt.innerText = `Séances auxquelles ${user.data().firstName} est inscrit(e) :`;
             target.appendChild(txt);
             var ul = document.createElement('ul');
+            var date, lastDate;
             snapshot.docs.forEach(session => {
-                displaySession(session, ul, false, true, false, false);
+                if (session.data().users && session.data().users[currentUser.id] == "signed up") {
+                    lastDate = date;
+                    date = session.data().startDate;
+                    if (lastDate != date) {
+                        let li = document.createElement('li');
+                        li.innerText = dayjs(session.data().startTimestamp).format("dddd D MMMM");
+                        li.classList.add('dateText');
+                        ul.appendChild(li);
+                    }else{console.log('double')}
+                    displaySession(session, ul, false, true, false, false); 
+                }
             });//end forEach
             target.appendChild(ul);
         }else{
-            console.log (`No session for ${user.data().firstName} with status --${status}--`);
+            console.log (`No session for ${user.data().firstName} with status --signed up--`);
             let txt = document.createElement('div');
             txt.innerText = `${user.data().firstName} n'est inscrit(e) sur aucune séance pour l'instant.`;
             target.appendChild(txt);
@@ -592,18 +603,24 @@ function displaySession(session, ul, signUp, unSignUp, modify, cancel){
 }
 
 function nbOfStatusInSession(status, session){
-    return Object.values(session.data().users).map(x => x = status).length;
+    if (session.data().users) {
+        return Object.values(session.data().users).map(x => x = status).length;
+    }else{
+        return 0;
+    }
 }
 
 function getUsersByStatus(status, session){
     let resultArray = [];
-    //for all users in session
-    Object.keys(session.data().users).forEach(userId => {
-        //if user is "signed up", or other status
-        if (session.data().users[userId] == status){
-            resultArray.push(userId);
-        }
-    })
+    if (session.data().users) {
+        //for all users in session
+        Object.keys(session.data().users).forEach(userId => {
+            //if user is "signed up", or other status
+            if (session.data().users[userId] == status){
+                resultArray.push(userId);
+            }
+        })
+    }
     return resultArray;
 }
 

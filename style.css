@@ -77,24 +77,27 @@ li{
     width: 100%;
 }
 
-.session{
-    margin-bottom: 2em;
+.dateText{
+    margin-top: 20px;
+    font-size: 1.2em;
+    font-weight: bold;
 }
-
+.session{
+    margin-top: 10px;
+}
 .session .top{
     background: var(--primary10);
     display: flex;
     justify-content: space-between;
-    padding: 0.5em;
+    padding: 10px;
     cursor: pointer;
-    
 }
 
 .session .bottom{
     padding: 0.5em;
     border: 4px solid var(--primary10);
     display: grid;
-    grid-template-columns: 1.5fr 1fr;
+    grid-template-columns: 1fr 1fr;
     grid-template-rows: auto;
 }
 
