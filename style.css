@@ -37,6 +37,15 @@ li button{
     text-transform: uppercase;
 }
 
+input{
+    font-size: 1.2em;
+    padding: 15px;
+    border: 0;
+    margin-bottom: 30px;
+    width: 100%;
+    text-transform: uppercase;
+}
+
 ul{
     margin: 0;
     padding: 0;

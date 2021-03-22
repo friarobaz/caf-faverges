@@ -198,8 +198,8 @@ function createTeacherMenu(target){
     }
 }
 function createNameList(target){
-    let txt = document.createElement('div');
-    txt.innerText = 'Cliquez sur un nom'
+    let h1 = document.createElement('h1');
+    h1.innerText = "Nom de l'élève";
     let input = document.createElement('input');
     input.setAttribute('name', 'input');
     input.setAttribute('id', 'nameInput');
@@ -207,13 +207,13 @@ function createNameList(target){
     input.setAttribute('onInput', 'sortNames()')
     let label = document.createElement('label');
     label.setAttribute = ('for', 'input');
-    label.innerText = ('Trier les noms : ');
+    label.innerHtml = ('Trier les noms : <br>');
     let ul = document.createElement('ul');
     ul.setAttribute('id', 'nameList');
     let wait = document.createElement('li');
     wait.innerText = "Veuillez patienter...";
     ul.appendChild(wait);
-    target.appendChild(txt);
+    target.appendChild(h1);
     target.appendChild(label);
     target.appendChild(input);
     target.appendChild(ul);
