@@ -24,7 +24,6 @@ let lastPage = 0;
 let forward = true;
 let selectedSessions = [];//array of doc objects
 //####################################################################################################################
-window.onbeforeunload = function() { return "Your work will be lost."; };
 displayPage(0);
 
 //####################################################################################################################
@@ -43,9 +42,8 @@ function displayPage(pageNumber){
     section.setAttribute('id', `page_${pageNumber}`);
     MAIN.appendChild(section);
     PAGES[pageNumber](section);
-    if (pageNumber>0) {
-        createBackButton(MAIN);
-    }
+    createBackButton(MAIN);
+    
 }
 //========================================= PAGE 1 (userType selection) =========================
 function userTypeSelection(target){
@@ -91,7 +89,7 @@ function checkPassword(target){
     if (forward) {
         if (USER_TYPES[currentUserType].password){//if password protected
             console.log("Checking password");
-            createPasswordForm(target, f => {
+            createPasswordForm(target, () => {
                 currentPage++;
                 displayPage(currentPage)
                 return;
@@ -271,11 +269,10 @@ function createActionMenu(target){
     function addActionToList(actionIndex, ul){
         let action = ACTIONS[actionIndex];
         let li = document.createElement('li');
-        let a = document.createElement('a');
-        a.innerText = action.name;
-        a.href = "#";
+        let button = document.createElement('button');
+        button.innerText = action.name;
         li.setAttribute('id', "action_"+actionIndex);
-        li.appendChild(a);
+        li.appendChild(button);
         ul.appendChild(li);
         li.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -316,20 +313,6 @@ function createActionMenu(target){
     authorizedActions(currentUserType).forEach(actionIndex => addActionToList(actionIndex, ul));
 }
 function createSignedUpSessionMenu(target, user){
-    function addSessionToList (session, ul){
-        let a = document.createElement('a');
-        a.innerText = title(session);
-        a.href = "#";
-        var li = document.createElement('li');
-        li.setAttribute('id', session.id);
-        li.appendChild(a); 
-        ul.appendChild(li);
-        li.addEventListener('click', (e) => {
-            e.stopPropagation();
-            console.log(session.data().startDate);
-            console.log(nbOfStatusInSession("signed up", session));
-        });
-    }
     db.collection('sessions').where(`users.${user.id}`, "==", 'signed up').get().then(snapshot => {
         if (snapshot.size) {
             console.log (`${snapshot.size} sessions found for ${user.data().firstName} with status --${status}--`);
@@ -338,8 +321,7 @@ function createSignedUpSessionMenu(target, user){
             target.appendChild(txt);
             var ul = document.createElement('ul');
             snapshot.docs.forEach(session => {
-                //addSessionToList(session, ul);
-                displaySession(session, ul);
+                displaySession(session, ul, false, true, false, false);
             });//end forEach
             target.appendChild(ul);
         }else{
@@ -469,18 +451,21 @@ function createBackButton(container){
     if (document.getElementById('backButton')) {
         document.getElementById('backButton').remove();
     }
-    let button = document.createElement('button');
-    button.setAttribute('id', 'backButton');
-    button.innerText = `Retour à la page ${currentPage-1}`;
-    container.appendChild(button);
-    button.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (currentPage > 0) {
-            lastPage = currentPage;
-            currentPage--;
-        }
-        displayPage(currentPage);
-    });
+    if (currentPage >0) {
+        let button = document.createElement('button');
+        button.setAttribute('id', 'backButton');
+        /* button.innerText = `Retour à la page ${currentPage-1}`; */
+        button.innerText = 'Retour';
+        container.appendChild(button);
+        button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (currentPage > 0) {
+                lastPage = currentPage;
+                currentPage--;
+            }
+            displayPage(currentPage);
+        });
+    }
 }
 function hideChildren(target){ // unused
     for (let i = 0; i < target.children.length; i++) {
@@ -504,6 +489,7 @@ function displaySession(session, ul, signUp, unSignUp, modify, cancel){
     top.classList.add("top");
     let bottom = document.createElement('div');
     bottom.classList.add("bottom");
+    bottom.classList.add("hidden");
 
     let time = document.createElement('div');
     time.innerText = `${s.startTime} à ${s.endTime}` ;
@@ -529,9 +515,19 @@ function displaySession(session, ul, signUp, unSignUp, modify, cancel){
     //user list
     let usersContainer = document.createElement('div');
     let usersTitle = document.createElement('div');
-    usersTitle.innerText = `Inscrits : (${signUps})`;
+    usersTitle.innerText = `Inscrits :`;
+    usersTitle.style.fontWeight = 'bold';
+    usersTitle.style.marginBottom = '10px';
     let userList = document.createElement('ul');
-    //POPULATE NAME LIST
+    getUsersByStatus("signed up", session).forEach(userId =>{
+        let li = document.createElement('li');
+        db.collection('users').doc(userId).get().then(doc =>{
+            li.innerText = doc.data().firstName + " " + doc.data().lastName;
+            userList.appendChild(li);
+        });
+        
+    })
+    
 
     let signUpButton = document.createElement('button');
     signUpButton.innerText = "S'inscrire";
@@ -545,22 +541,42 @@ function displaySession(session, ul, signUp, unSignUp, modify, cancel){
     let cancelButton = document.createElement('button');
     cancelButton.innerText = "Annuler";
 
+    let buttons = document.createElement('div');
+    let infos = document.createElement('div');
+
     top.appendChild(time);
     top.appendChild(location);
     top.appendChild(spotsLeft);
-    bottom.appendChild(age);
-    bottom.appendChild(teacher);
-    bottom.appendChild(spots);
+    infos.appendChild(age);
+    infos.appendChild(teacher);
+    infos.appendChild(spots);
+    
+    if (signUp) {
+        buttons.appendChild(signUpButton);
+    }
+    if (unSignUp) {
+        buttons.appendChild(unSignUpButton);
+    }
+    if (modify) {
+        buttons.appendChild(modifyButton);
+    }
+    if (cancel) {
+        buttons.appendChild(cancelButton);
+    }
     if (s.description) {
         bottom.appendChild(description);
+        description.style.gridArea = '2/1/2/3';
+        description.style.marginBottom = '20px';
     }
-    bottom.appendChild(signUpButton);
-    bottom.appendChild(unSignUpButton);
-    bottom.appendChild(modifyButton);
-    bottom.appendChild(cancelButton);
+    bottom.appendChild(infos)
+    infos.style.gridArea = '1/1';
+    infos.style.marginBottom = '20px';
+    bottom.appendChild(buttons);
+    buttons.style.gridArea = '1/2';
     usersContainer.appendChild(usersTitle);
     usersContainer.appendChild(userList);
     bottom.appendChild(usersContainer);
+    usersContainer.style.gridArea = '3/1/3/3';
     li.appendChild(top);
     li.appendChild(bottom);
     ul.appendChild(li);
@@ -569,11 +585,29 @@ function displaySession(session, ul, signUp, unSignUp, modify, cancel){
         e.stopPropagation();
         console.log(session.data().startDate);
     });
+    top.addEventListener('click', (e) => {
+        e.stopPropagation();
+        bottom.classList.toggle('hidden');
+    });
 }
 
 function nbOfStatusInSession(status, session){
     return Object.values(session.data().users).map(x => x = status).length;
 }
+
+function getUsersByStatus(status, session){
+    let resultArray = [];
+    //for all users in session
+    Object.keys(session.data().users).forEach(userId => {
+        //if user is "signed up", or other status
+        if (session.data().users[userId] == status){
+            resultArray.push(userId);
+        }
+    })
+    return resultArray;
+}
+
+
 // TO DO
 /*
 

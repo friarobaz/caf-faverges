@@ -1,5 +1,6 @@
 :root {
     --primary: #025eb9;
+    --primary10: #025db936;
     --secondary: #ffffff;
   }
 
@@ -15,6 +16,10 @@ body{
     font-family: sans-serif;
     overflow-x: hidden;
 }
+#main{
+    margin: 0 auto;
+    max-width: 500px;
+}
 section{
     width: 100%;
     /* border: 1px solid black; */
@@ -26,20 +31,32 @@ h1{
 }
 
 li button{
+    background: none;
+    padding: 20px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+button{
+    color: var(--primary);
+    padding: 10px;
+    margin-right: 20px;
+    border: 2px solid var(--primary);
     cursor: pointer;
     font-size: 1em;
-    border-radius: 0px;
-    color: var(--primary);
-    border: 2px solid var(--primary);
-    background: rgba(255, 255, 255, 0.0);
-    padding: 20px;
     width: 100%;
+}
+
+#backButton{
+    background: var(--primary);
+    color: white;
+    padding: 20px;
     text-transform: uppercase;
 }
 
 input{
     font-size: 1.2em;
-    padding: 15px;
+    padding: 20px;
     border: 0;
     margin-bottom: 30px;
     width: 100%;
@@ -52,7 +69,7 @@ ul{
 
 li{
     list-style: none;
-    margin-bottom: 20px;
+    
     padding: 0;;
     font-size: 1em;
     /* background: yellowgreen;
@@ -61,21 +78,31 @@ li{
 }
 
 .session{
-    background: yellow;
     margin-bottom: 2em;
-    
-    border-radius: 10px;
-    overflow: hidden;
 }
 
 .session .top{
-    background: yellowgreen;
+    background: var(--primary10);
     display: flex;
     justify-content: space-between;
     padding: 0.5em;
+    cursor: pointer;
+    
 }
 
 .session .bottom{
-    background: green;
     padding: 0.5em;
+    border: 4px solid var(--primary10);
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    grid-template-rows: auto;
 }
+
+.hidden{
+    display: none !important;
+}
+
+/* div{
+    border: 1px solid black;
+} */
+
