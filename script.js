@@ -24,7 +24,7 @@ let lastPage = 0;
 let forward = true;
 let selectedSessions = [];//array of doc objects
 //####################################################################################################################
-
+window.onbeforeunload = function() { return "Your work will be lost."; };
 displayPage(0);
 
 //####################################################################################################################
