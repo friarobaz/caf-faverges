@@ -1,6 +1,7 @@
 :root {
     --primary: #025eb9;
     --primary10: #025db936;
+    --primary5: #025db90c;
     --secondary: #ffffff;
   }
 
@@ -36,6 +37,9 @@ li button{
     text-transform: uppercase;
     margin-bottom: 20px;
 }
+li button:hover{
+    background: var(--primary5);
+}
 
 button{
     color: var(--primary);
@@ -52,6 +56,7 @@ button{
     color: white;
     padding: 20px;
     text-transform: uppercase;
+    margin-top: 30px;
 }
 
 input{

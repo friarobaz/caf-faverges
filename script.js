@@ -10,7 +10,7 @@ const ACTIONS = [
     {name: "Créer une séance", function: createSession}, //0
     {name: "Modifier une séance", function: modifySession}, //1
     {name: "Voir les statistiques de l'élève", function: viewUserStats}, //2
-    {name: "S'inscrire à des séances", function: signUp}, //3
+    {name: "S'inscrire à des séances", function: signUpPage}, //3
     {name: "Voir les statistiques globales", function: viewGlobalStats}, //4
     {name: "Facturer", function: bill}, //5
 ];
@@ -313,9 +313,12 @@ function createActionMenu(target){
     authorizedActions(currentUserType).forEach(actionIndex => addActionToList(actionIndex, ul));
 }
 function createSignedUpSessionMenu(target, user){
-    db.collection('sessions').orderBy('startTimestamp').get().then(snapshot => {
+
+    console.log(getSessions(false, true));
+    
+    /* db.collection('sessions').orderBy('startTimestamp').where('startTimestamp', '>=', Date.now()).get().then(snapshot => {
         if (snapshot.size) {
-            console.log (`${snapshot.size} sessions found for ${user.data().firstName} with status --${status}--`);
+            console.log (`${snapshot.size} sessions found`);
             let txt = document.createElement('p');
             txt.innerText = `Séances auxquelles ${user.data().firstName} est inscrit(e) :`;
             target.appendChild(txt);
@@ -341,7 +344,7 @@ function createSignedUpSessionMenu(target, user){
             txt.innerText = `${user.data().firstName} n'est inscrit(e) sur aucune séance pour l'instant.`;
             target.appendChild(txt);
         }
-    });//end snapshot, don't put anything after
+    });//end snapshot, don't put anything after */
 }
 
 //========================================= PAGE 5 (action page) =============================
@@ -368,7 +371,7 @@ function viewUserStats(){
 
 }
 //========================================= ACTION 4 (signup) =============================
-function signUp(target){
+function signUpPage(target){
     selectedSessions = []; 
     createUpcomingSessionMenu(target)
 }
@@ -624,6 +627,41 @@ function getUsersByStatus(status, session){
     return resultArray;
 }
 
+function getSessions(past, future){
+    var tmpArray = [];
+    let operator = '';
+    if(!future && !past){
+        console.log("Error: you must chose future or past sessions");
+    }else if (future && past) { //if everything
+        db.collection('sessions').orderBy('startTimestamp').get().then(snapshot => {
+            if (snapshot.size) {
+                console.log (`${snapshot.size} sessions found`);
+                snapshot.docs.forEach(session => {
+                    tmpArray.push(session);
+                });//end forEach
+                return tmpArray;
+            }else{
+                console.log (`No session found`);
+            }
+        });
+    }else { //if only past or only future
+        if(future && !past){
+        operator = '>=';
+        }else if(!future && past){
+            operator = '<';
+        }
+        db.collection('sessions').orderBy('startTimestamp').where('startTimestamp', operator, Date.now()).get().then(snapshot => {
+            if (snapshot.size) {
+                console.log (`${snapshot.size} sessions found`);
+                snapshot.docs.forEach(session => {
+                    tmpArray.push(session);
+                });//end forEach
+            }else{
+                console.log (`No session found`);
+            }
+        });
+    }
+}
 
 // TO DO
 /*
