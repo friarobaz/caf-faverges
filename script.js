@@ -328,8 +328,6 @@ async function createSignedUpSessionMenu(target, user){
                 li.innerText = dayjs(session.data().startTimestamp).format("dddd D MMMM");
                 li.classList.add('dateText');
                 ul.appendChild(li);
-            }else{
-                console.log('double');
             }
             displaySession(session, ul, false, true, false, false); 
             });//end foreach
@@ -438,6 +436,9 @@ function bill(){
     
 }
 //########################################## GENERIC FUNCTIONS ######################################
+
+// A CHANGER
+
 function changeStatus(user, session, status){
     console.log(`Adding ${currentUser.data().firstName} to ${status} array on ${session.data().startDate}`);
     return db.collection('users').doc(user.id).update({
@@ -491,7 +492,7 @@ function title(session){
 }
 function displaySession(session, ul, signUp, unSignUp, modify, cancel){
     let s = session.data();
-    let signUps = nbOfStatusInSession("signed up", session);
+    let signUps = session.data().signedUp.length;
     let li = document.createElement('div');
     li.classList.add("session");
     let top = document.createElement('div');
@@ -528,7 +529,7 @@ function displaySession(session, ul, signUp, unSignUp, modify, cancel){
     usersTitle.style.fontWeight = 'bold';
     usersTitle.style.marginBottom = '10px';
     let userList = document.createElement('ul');
-    getUsersByStatus("signed up", session).forEach(userId =>{
+    session.data().signedUp.forEach(userId =>{
         let li = document.createElement('li');
         db.collection('users').doc(userId).get().then(doc =>{
             li.innerText = doc.data().firstName + " " + doc.data().lastName;
@@ -598,14 +599,6 @@ function displaySession(session, ul, signUp, unSignUp, modify, cancel){
         e.stopPropagation();
         bottom.classList.toggle('hidden');
     });
-}
-
-function nbOfStatusInSession(status, session){
-    if (session.data().users) {
-        return Object.values(session.data().users).map(x => x = status).length;
-    }else{
-        return 0;
-    }
 }
 
 function getUsersByStatus(status, session){
