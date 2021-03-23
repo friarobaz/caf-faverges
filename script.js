@@ -312,39 +312,36 @@ function createActionMenu(target){
     target.appendChild(container);
     authorizedActions(currentUserType).forEach(actionIndex => addActionToList(actionIndex, ul));
 }
-function createSignedUpSessionMenu(target, user){
-
-    console.log(getSessions(false, true));
-    
-    /* db.collection('sessions').orderBy('startTimestamp').where('startTimestamp', '>=', Date.now()).get().then(snapshot => {
-        if (snapshot.size) {
-            console.log (`${snapshot.size} sessions found`);
-            let txt = document.createElement('p');
-            txt.innerText = `Séances auxquelles ${user.data().firstName} est inscrit(e) :`;
-            target.appendChild(txt);
-            var ul = document.createElement('ul');
-            var date, lastDate;
-            snapshot.docs.forEach(session => {
-                if (session.data().users && session.data().users[currentUser.id] == "signed up") {
-                    lastDate = date;
-                    date = session.data().startDate;
-                    if (lastDate != date) {
-                        let li = document.createElement('li');
-                        li.innerText = dayjs(session.data().startTimestamp).format("dddd D MMMM");
-                        li.classList.add('dateText');
-                        ul.appendChild(li);
-                    }else{console.log('double')}
-                    displaySession(session, ul, false, true, false, false); 
-                }
-            });//end forEach
-            target.appendChild(ul);
-        }else{
-            console.log (`No session for ${user.data().firstName} with status --signed up--`);
-            let txt = document.createElement('div');
-            txt.innerText = `${user.data().firstName} n'est inscrit(e) sur aucune séance pour l'instant.`;
-            target.appendChild(txt);
-        }
-    });//end snapshot, don't put anything after */
+async function createSignedUpSessionMenu(target, user){
+    let txt = document.createElement('div');
+    txt.innerText = `Séances auxquelles ${user.data().firstName} est inscrit(e) :`;
+    target.appendChild(txt);
+    var ul = document.createElement('ul');
+    var date, lastDate;
+    let sessions = await getUserSessions(false, true, user, "signedUp");
+    if (sessions) {
+        sessions.forEach(session=>{
+            lastDate = date;
+            date = session.data().startDate;
+            if (lastDate != date) {
+                let li = document.createElement('li');
+                li.innerText = dayjs(session.data().startTimestamp).format("dddd D MMMM");
+                li.classList.add('dateText');
+                ul.appendChild(li);
+            }else{
+                console.log('double');
+            }
+            displaySession(session, ul, false, true, false, false); 
+            });//end foreach
+        target.appendChild(ul);
+    }else{
+        console.log (`No session for ${user.data().firstName} with status --signed up--`);
+        let txt = document.createElement('div');
+        txt.innerText = `${user.data().firstName} n'est inscrit(e) sur aucune séance pour l'instant.`;
+        txt.style.color = 'grey';
+        txt.style.marginTop = '20px';
+        target.appendChild(txt);
+    }              
 }
 
 //========================================= PAGE 5 (action page) =============================
@@ -442,15 +439,13 @@ function bill(){
 }
 //########################################## GENERIC FUNCTIONS ######################################
 function changeStatus(user, session, status){
-    console.log(`Changing status of ${currentUser.data().firstName} to --${status}-- on ${session.data().startDate}`);
-    //change status of USERS object in SESSION document
-    return db.collection('sessions').doc(session.id).update({
-        [`users.${user.id}`]: status
+    console.log(`Adding ${currentUser.data().firstName} to ${status} array on ${session.data().startDate}`);
+    return db.collection('users').doc(user.id).update({
+        signedUp: firebase.firestore.FieldValue.arrayUnion(session.id)
     })
-    //change status of SESSIONS object in USER document
     .then(()=>{
-        db.collection('users').doc(user.id).update({
-            [`sessions.${session.id}`]: status
+        db.collection('sessions').doc(session.id).update({
+            signedUp: firebase.firestore.FieldValue.arrayUnion(user.id)
         })
     })
     .then(() => {
@@ -627,41 +622,41 @@ function getUsersByStatus(status, session){
     return resultArray;
 }
 
-function getSessions(past, future){
-    var tmpArray = [];
+function getUserSessions(past, future, user, status){
+    var resultArray = [];
     let operator = '';
-    if(!future && !past){
+    let date;
+    if(!future && !past){ //if nothing
         console.log("Error: you must chose future or past sessions");
     }else if (future && past) { //if everything
-        db.collection('sessions').orderBy('startTimestamp').get().then(snapshot => {
-            if (snapshot.size) {
-                console.log (`${snapshot.size} sessions found`);
-                snapshot.docs.forEach(session => {
-                    tmpArray.push(session);
-                });//end forEach
-                return tmpArray;
-            }else{
-                console.log (`No session found`);
-            }
-        });
-    }else { //if only past or only future
-        if(future && !past){
-        operator = '>=';
-        }else if(!future && past){
-            operator = '<';
-        }
-        db.collection('sessions').orderBy('startTimestamp').where('startTimestamp', operator, Date.now()).get().then(snapshot => {
-            if (snapshot.size) {
-                console.log (`${snapshot.size} sessions found`);
-                snapshot.docs.forEach(session => {
-                    tmpArray.push(session);
-                });//end forEach
-            }else{
-                console.log (`No session found`);
-            }
-        });
+        console.log("all");
+        operator = '>='; 
+        date = 0;
+    }else if(future && !past){ //if future
+        console.log("future");
+        operator = '>='; 
+        date = Date.now();
+    }else if(!future && past){ //if past
+        console.log("past");
+        operator = '<'; 
+        date = Date.now();
     }
+    return db.collection('sessions').orderBy('startTimestamp').where('startTimestamp', operator, date)
+    .where(status, 'array-contains', user.id).get().then(snapshot => {
+        if (snapshot.size) {
+            console.log (`${snapshot.size} sessions found`);
+            snapshot.docs.forEach(session => {
+                console.log(session.id);
+                resultArray.push(session);
+            });//end forEach
+            return resultArray;
+        }else{
+            console.log (`No session found`);
+        }
+    });
 }
+
+
 
 // TO DO
 /*
