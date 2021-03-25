@@ -194,8 +194,8 @@ function toggleMultiDay() {
 }
 
 function addMinutes(){
-    let oldTimestamp = new Date(sessionObject().endTimestamp);
-    let newTime = dayjs(oldTimestamp).add(30, 'minute').format("HH:mm")
+    //let oldTimestamp = new Date(sessionObject().endTimestamp);
+    let newTime = dayjs(sessionObject().endTimestamp).add(30, 'minute').format("HH:mm")
     form.endTime.value = newTime;
     displayDuration();
 }
@@ -224,8 +224,8 @@ function sessionObject(){
     }else{
         endDate = startDate;
     }
-    let startTimestamp = Date.parse(startDate + "T" + startTime+ ":00+01:00");
-    let endTimestamp = Date.parse(endDate + "T" + endTime+ ":00+01:00");
+    let startTimestamp = dayjs(Date.parse(startDate + "T" + startTime+ ":00")).valueOf();
+    let endTimestamp = dayjs(Date.parse(endDate + "T" + endTime+ ":00")).valueOf();
     let startDJS = dayjs(new Date(startTimestamp));
     let endDJS = dayjs(new Date(endTimestamp));
     let duration = endDJS.diff(startDJS, "hour", true);

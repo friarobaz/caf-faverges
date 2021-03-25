@@ -2,7 +2,10 @@
     --primary: #025eb9;
     --primary10: #025db936;
     --primary5: #025db90c;
-    --secondary: #ffffff;
+    --green: rgb(72, 143, 2);
+    --green10: rgba(72, 143, 2, 0.5);
+    --red: rgb(209, 31, 0);
+    --red10: rgba(209, 31, 0, 0.5);
   }
 
 *{
@@ -90,6 +93,25 @@ li{
 .session{
     margin-top: 10px;
 }
+.session.signedUp .bottom{
+    border-color: var(--green10);
+}
+.session.signedUp .top{
+    background: var(--green10);
+}
+.signUpButton{
+    color: var(--green);
+    border-color: var(--green);
+}
+.unSignUpButton{
+    color: var(--red);
+    border-color: var(--red);
+}
+.session button{
+    margin: 5px;
+    font-size: 0.8em;
+    padding: 10px;
+}
 .session .top{
     background: var(--primary10);
     display: flex;
@@ -113,4 +135,8 @@ li{
 /* div{
     border: 1px solid black;
 } */
+
+.disabled{
+    display: none !important;
+}
 

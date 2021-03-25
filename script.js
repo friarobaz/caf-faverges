@@ -45,7 +45,7 @@ function displayPage(pageNumber){
     createBackButton(MAIN);
     
 }
-//========================================= PAGE 1 (userType selection) =========================
+//========================================= PAGE 0 (userType selection) =========================
 function userTypeSelection(target){
     currentUserType = null;
     createUserTypeMenu(target);
@@ -84,7 +84,7 @@ function createUserTypeMenu(target){
     addUserTypeToList(0, ul); //add admin
     //container.style.display = '';
 }
-//========================================= PAGE 2 (password check) =========================
+//========================================= PAGE 1 (password check) =========================
 function checkPassword(target){
     if (forward) {
         if (USER_TYPES[currentUserType].password){//if password protected
@@ -139,7 +139,7 @@ function createPasswordForm(target, functionIfRight){
         
     });
 }
-//========================================= PAGE 3 (user selection) =========================
+//========================================= PAGE 2 (user selection) =========================
 function userSelection(target){
     currentUser = null;
     if (USER_TYPES[currentUserType].userSelectionNeeded) { //if selection needed
@@ -254,7 +254,7 @@ function sortNames() {
       }
     }
   }
-//========================================= PAGE 4 (action selection) =========================
+//========================================= PAGE 3 (action selection) =========================
 function actionSelection(target){
     let h1 = document.createElement('h1');
     h1.innerText = `${currentUser.data().firstName} ${currentUser.data().lastName}`;
@@ -263,7 +263,7 @@ function actionSelection(target){
         document.getElementById("actionMenu").remove();
     }
     createActionMenu(target);
-    createSignedUpSessionMenu(target, currentUser);
+    displaySessionList(target, false, true, currentUser, "signedUp", false, true, false, false)
 }
 function createActionMenu(target){ 
     function addActionToList(actionIndex, ul){
@@ -303,46 +303,14 @@ function createActionMenu(target){
     }
     let container = document.createElement('div');
     container.setAttribute('id', "actionMenu");
-    /* let txt = document.createElement('div');
-    txt.innerText = "Voici les actions possible en tant que "+USER_TYPES[currentUserType].name; */
     let ul = document.createElement('ul');
     ul.setAttribute('id', "authorizedActionList");
-    /* container.appendChild(txt); //display text */
     container.appendChild(ul); //display action list
     target.appendChild(container);
     authorizedActions(currentUserType).forEach(actionIndex => addActionToList(actionIndex, ul));
 }
-async function createSignedUpSessionMenu(target, user){
-    let txt = document.createElement('div');
-    txt.innerText = `Séances auxquelles ${user.data().firstName} est inscrit(e) :`;
-    target.appendChild(txt);
-    var ul = document.createElement('ul');
-    var date, lastDate;
-    let sessions = await getUserSessions(false, true, user, "signedUp");
-    if (sessions) {
-        sessions.forEach(session=>{
-            lastDate = date;
-            date = session.data().startDate;
-            if (lastDate != date) {
-                let li = document.createElement('li');
-                li.innerText = dayjs(session.data().startTimestamp).format("dddd D MMMM");
-                li.classList.add('dateText');
-                ul.appendChild(li);
-            }
-            displaySession(session, ul, false, true, false, false); 
-            });//end foreach
-        target.appendChild(ul);
-    }else{
-        console.log (`No session for ${user.data().firstName} with status --signed up--`);
-        let txt = document.createElement('div');
-        txt.innerText = `${user.data().firstName} n'est inscrit(e) sur aucune séance pour l'instant.`;
-        txt.style.color = 'grey';
-        txt.style.marginTop = '20px';
-        target.appendChild(txt);
-    }              
-}
 
-//========================================= PAGE 5 (action page) =============================
+//========================================= PAGE 4 (action page) =============================
 function actionPage(target){
     console.log("Welcome to the action page");
     console.log("action selected: "+ACTIONS[currentAction].name);
@@ -367,11 +335,431 @@ function viewUserStats(){
 }
 //========================================= ACTION 4 (signup) =============================
 function signUpPage(target){
-    selectedSessions = []; 
-    createUpcomingSessionMenu(target)
+    //selectedSessions = []; 
+    //createUpcomingSessionMenu(target)
+    displaySessionList(target, false, true, false, false, true, false, false, false);
 }
+function signUp(user, session){
+    console.log(`Signing up ${currentUser.data().firstName} to ${session.data().startDate}`);
+    return db.collection('users').doc(user.id).update({
+        signedUp: firebase.firestore.FieldValue.arrayUnion(session.id)
+    })
+    .then(()=>{
+        db.collection('sessions').doc(session.id).update({
+            signedUp: firebase.firestore.FieldValue.arrayUnion(user.id)
+        })
+    })
+    .then(() => {
+        console.log("Document successfully updated!");
+    })
+    .catch((error) => {
+        console.error("Error updating document: ", error);
+    });
+}
+function unSignUp (user, session){
+    console.log(`UnSigning up ${currentUser.data().firstName} to ${session.data().startDate}`);
+    return db.collection('users').doc(user.id).update({
+        signedUp: firebase.firestore.FieldValue.arrayRemove(session.id)
+    })
+    .then(()=>{
+        db.collection('sessions').doc(session.id).update({
+            signedUp: firebase.firestore.FieldValue.arrayRemove(user.id)
+        })
+    })
+    .then(() => {
+        console.log("Document successfully updated!");
+    })
+    .catch((error) => {
+        console.error("Error updating document: ", error);
+    });
+}
+//========================================= ACTION 5 (view global stats) =============================
+function viewGlobalStats(){
 
-function createUpcomingSessionMenu(target){ //ADD AGE RESTRICTION
+}
+//========================================= ACTION 6 (bill) =============================
+function bill(){
+    
+}
+//########################################## GENERIC FUNCTIONS ######################################
+
+// A CHANGER
+
+
+function createBackButton(container){
+    
+    if (document.getElementById('backButton')) {
+        document.getElementById('backButton').remove();
+    }
+    if (currentPage >0) {
+        let button = document.createElement('button');
+        button.setAttribute('id', 'backButton');
+        /* button.innerText = `Retour à la page ${currentPage-1}`; */
+        button.innerText = 'Retour';
+        container.appendChild(button);
+        button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (currentPage > 0) {
+                lastPage = currentPage;
+                currentPage--;
+            }
+            displayPage(currentPage);
+        });
+    }
+}
+function displaySession(session, ul, showSignUp, showUnSignUp, showModify, showCancel){
+    let s = session.data();
+    
+    if (document.getElementById(session.id)) {
+        var li = document.getElementById(session.id);
+        //li.innerHTML = '';
+    }else{
+        var li = document.createElement('li');
+        li.classList.add("session");
+        li.setAttribute('id', session.id);
+        ul.appendChild(li);
+    }
+    
+    let top = document.createElement('div');
+    top.classList.add("top");
+    let bottom = document.createElement('div');
+    bottom.classList.add("bottom");
+    bottom.classList.add("hidden");
+    let time = document.createElement('div');
+    time.innerText = getTiming(session);
+    let title = document.createElement('div');
+    if (s.title) {
+        title.innerText = s.title;
+    }else{
+        title.innerText = s.location;
+    }
+    let signUps = document.createElement('span');
+    signUps.innerText = session.data().signedUp.length;
+    signUps.classList.add('signUps');
+    let spotsLeft = document.createElement('div');
+    let maxUsers = document.createElement('span');
+    maxUsers.innerText = `/${s.maxUsers}`;
+    spotsLeft.appendChild(signUps);
+    spotsLeft.appendChild(maxUsers);
+    let age = document.createElement('div');
+    age.innerText = `Âges : ${s.minAge}-${s.maxAge} ans`;
+    let teacher = document.createElement('div');
+    teacher.innerText = `Moniteur : ${s.teacher}`;
+    let spots = document.createElement('div');
+    spots.innerText = `Places : ${s.maxUsers}`;
+    let description = document.createElement('div');
+    description.innerText = `${s.description}`;
+
+    //user list
+    let usersContainer = document.createElement('div');
+    let usersTitle = document.createElement('div');
+    usersTitle.innerText = `Inscrits :`;
+    usersTitle.style.fontWeight = 'bold';
+    usersTitle.style.marginBottom = '10px';
+    let userList = document.createElement('ul');
+    session.data().signedUp.forEach(userId =>{
+        let li = document.createElement('li');
+        li.setAttribute('class', userId);
+        db.collection('users').doc(userId).get().then(doc =>{
+            li.innerText = doc.data().firstName + " " + doc.data().lastName;
+            userList.appendChild(li);
+        });
+    })
+    
+    let signUpButton = document.createElement('button');
+    signUpButton.innerText = "S'inscrire";
+    signUpButton.classList.add('signUpButton');
+    signUpButton.style.display = 'none';
+    let unSignUpButton = document.createElement('button');
+    unSignUpButton.innerText = "Se désinscrire";
+    unSignUpButton.classList.add('unSignUpButton');
+    unSignUpButton.style.display = 'none';
+    let modifyButton = document.createElement('button');
+    modifyButton.innerText = "Modifier";
+    modifyButton.classList.add('modifyButton');
+    modifyButton.style.display = 'none';
+    let cancelButton = document.createElement('button');
+    cancelButton.innerText = "Annuler";
+    cancelButton.classList.add('cancelButton');
+    cancelButton.style.display = 'none';
+    let buttons = document.createElement('div');
+    let infos = document.createElement('div');
+    top.appendChild(time);
+    top.appendChild(title);
+    top.appendChild(spotsLeft);
+    infos.appendChild(age);
+    infos.appendChild(teacher);
+    infos.appendChild(spots);
+    buttons.appendChild(signUpButton);
+    buttons.appendChild(unSignUpButton);
+    buttons.appendChild(modifyButton);
+    buttons.appendChild(cancelButton);
+    if (showSignUp) {
+        signUpButton.style.display = '';
+    }
+    if (showUnSignUp) {
+        unSignUpButton.style.display = '';
+    }
+    if (showModify) {
+        modifyButton.style.display = '';
+    }
+    if (showCancel) {
+        cancelButton.style.display = '';
+    }
+    if (s.description) {
+        bottom.appendChild(description);
+        description.style.gridArea = '2/1/2/3';
+        description.style.marginBottom = '20px';
+    }
+    bottom.appendChild(infos)
+    infos.style.gridArea = '1/1';
+    infos.style.marginBottom = '20px';
+    bottom.appendChild(buttons);
+    buttons.style.gridArea = '1/2';
+    usersContainer.appendChild(usersTitle);
+    usersContainer.appendChild(userList);
+    bottom.appendChild(usersContainer);
+    usersContainer.style.gridArea = '3/1/3/3';
+    li.appendChild(top);
+    li.appendChild(bottom);
+    //ul.appendChild(li);
+    
+    if (isUserInSession(currentUser, session)) {
+        li.classList.add('signedUp');
+        signUpButton.style.display = 'none';
+        unSignUpButton.style.display = '';
+    }
+    signUpButton.addEventListener('click', (e) => {
+        e.stopPropagation();       
+        let x = document.getElementById(session.id).getElementsByClassName('signUps')[0].innerText;
+        document.getElementById(session.id).getElementsByClassName('signUps')[0].innerText = Number(x)+1;
+        signUp(currentUser, session);
+        li.classList.add('signedUp');
+        signUpButton.style.display = 'none';
+        unSignUpButton.style.display = '';
+        let tmpUserName = document.createElement('li');
+        tmpUserName.textContent = currentUser.data().firstName +" "+currentUser.data().lastName;
+        tmpUserName.setAttribute('class', currentUser.id);
+        userList.appendChild(tmpUserName);
+    });
+    unSignUpButton.addEventListener('click', (e) => {
+        e.stopPropagation();        
+        if (confirm("Êtes vous sûrs ?")) {
+            let x = document.getElementById(session.id).getElementsByClassName('signUps')[0].innerText;
+            document.getElementById(session.id).getElementsByClassName('signUps')[0].innerText = Number(x)-1;
+            unSignUp(currentUser, session);
+            li.classList.remove('signedUp');
+            signUpButton.style.display = '';
+            unSignUpButton.style.display = 'none';
+            document.getElementById(session.id).getElementsByClassName(currentUser.id)[0].remove();
+            if (currentPage == 3) {
+                document.getElementById(session.id).remove();
+                if (document.getElementById(session.data().startDate).children.length <= 1) {
+                    document.getElementById(session.data().startDate).remove();
+                }
+            }
+        }
+    });
+    top.addEventListener('click', (e) => {
+        e.stopPropagation();
+        bottom.classList.toggle('hidden');
+    });
+}
+async function displaySessionList(target, past, future, user, status, signUp, unSignUp, modify, cancel){
+    if (document.getElementById('sessionList')) {
+        document.getElementById('sessionList').remove();
+    }
+    var sessionsArray = [];
+    var div = document.createElement('div');
+    div.setAttribute('id', 'sessionList');
+    var ul = document.createElement('ul');
+    if (user && status) {
+        let txt = document.createElement('div');
+        txt.innerText = `Séances auxquelles ${user.data().firstName} est inscrit(e) :`;
+        div.appendChild(txt);
+        sessionsArray = await getUserSessions(past, future, user, status);
+    }else{
+        sessionsArray = await getAllSessions(past, future);
+    }
+    if (sessionsArray) {
+        sessionsArray.forEach(session=>{
+            console.log(document.getElementById(session.data().startDate))
+            if (document.getElementById(session.data().startDate)){
+                var destination = document.getElementById(session.data().startDate);
+                
+            }else{
+                var li = document.createElement('li');
+                let h3 = document.createElement('h3');
+                h3.innerText = dayjs(session.data().startTimestamp).format("dddd D MMMM");
+                li.appendChild(h3)
+                li.setAttribute('id', session.data().startDate);
+                li.classList.add('dateContainer');
+                ul.appendChild(li);
+                var destination = li;
+            }
+            displaySession(session, destination, signUp, unSignUp, modify, cancel)
+            div.appendChild(ul);
+            target.appendChild(div);  
+        })//end for each
+        div.appendChild(ul);
+    }else{
+        console.log (`No session found`);
+        let txt = document.createElement('div');
+        txt.innerText = `Aucune séance trouvée`;
+        txt.style.color = 'grey';
+        txt.style.marginTop = '20px';
+        div.appendChild(txt);
+    }     
+    target.appendChild(div);     
+    console.log(document.getElementById('mardi'));  
+}
+function getUserSessions(past, future, user, status){
+    var resultArray = [];
+    let operator = '';
+    let date;
+    if(!future && !past){ //if nothing
+        console.log("Error: you must chose future or past sessions");
+    }else if (future && past) { //if everything
+        console.log("all");
+        operator = '>='; 
+        date = 0;
+    }else if(future && !past){ //if future
+        console.log("future");
+        operator = '>='; 
+        date = Date.now();
+    }else if(!future && past){ //if past
+        console.log("past");
+        operator = '<'; 
+        date = Date.now();
+    }
+    return db.collection('sessions').orderBy('startTimestamp').where('startTimestamp', operator, date)
+    .where(status, 'array-contains', user.id).get().then(snapshot => {
+        if (snapshot.size) {
+            console.log (`${snapshot.size} sessions found`);
+            snapshot.docs.forEach(session => {
+                console.log(session.id);
+                resultArray.push(session);
+            });//end forEach
+            return resultArray;
+        }else{
+            console.log (`No session found`);
+        }
+    });
+}
+function getAllSessions(past, future){//returns array of sessions
+    var resultArray = [];
+    let operator = '';
+    let date;
+    if(!future && !past){ //if nothing
+        console.log("Error: you must chose future or past sessions");
+    }else if (future && past) { //if everything
+        console.log("all");
+        operator = '>='; 
+        date = 0;
+    }else if(future && !past){ //if future
+        console.log("future");
+        operator = '>='; 
+        date = Date.now();
+    }else if(!future && past){ //if past
+        console.log("past");
+        operator = '<'; 
+        date = Date.now();
+    }
+    return db.collection('sessions').orderBy('startTimestamp').where('startTimestamp', operator, date)
+    .get().then(snapshot => {
+        if (snapshot.size) {
+            console.log (`${snapshot.size} sessions found`);
+            snapshot.docs.forEach(session => {
+                console.log(session.id);
+                resultArray.push(session);
+            });//end forEach
+            return resultArray;
+        }else{
+            console.log (`No session found`);
+        }
+    });
+}
+function getTiming(session){
+    function getSimpleTime(timestamp){
+        let hours = dayjs(timestamp).format("HH");
+        let minutes = dayjs(timestamp).format("mm");
+        if (minutes == "00") {
+            minutes = "";
+        }
+        return `${hours}h${minutes}`
+    }
+    let A = session.data().startTimestamp;
+    let B = session.data().endTimestamp;
+    let multi = session.data().multiDay;
+    if (multi) {
+        let month_A = dayjs(A).format("MMMM");
+        let month_B = dayjs(B).format("MMMM");
+        if (month_A == month_B) {
+            return `${dayjs(A).format("D")} au ${dayjs(B).format("D MMMM")}`;
+        }else{
+            return `${dayjs(A).format("D MMMM")} au ${dayjs(B).format("D MMMM")}`;
+        }
+    }else{ //if single day
+        return `${getSimpleTime(A)} à ${getSimpleTime(B)}`
+    }
+}
+function delSessions(){
+    db.collection("sessions")
+    .get()
+    .then(res => {
+        res.forEach(element => {
+        if (confirm("sur?")) {
+            element.ref.delete();
+        }
+        });
+    });
+}
+function isUserInSession(user, session){
+    if (session.data().signedUp) {
+        if (session.data().signedUp.indexOf(user.id)>-1) {
+            return true;
+        }else{
+            return false;
+        }
+    }
+}
+// TO DO
+/*
+live refresh user list
+fix user issue when not parent
+*/
+
+
+
+/* function changeStatus(user, session, status){
+    console.log(`Adding ${currentUser.data().firstName} to ${status} array on ${session.data().startDate}`);
+    return db.collection('users').doc(user.id).update({
+        signedUp: firebase.firestore.FieldValue.arrayUnion(session.id)
+    })
+    .then(()=>{
+        db.collection('sessions').doc(session.id).update({
+            signedUp: firebase.firestore.FieldValue.arrayUnion(user.id)
+        })
+    })
+    .then(() => {
+        console.log("Document successfully updated!");
+    })
+    .catch((error) => {
+        console.error("Error updating document: ", error);
+    });
+} */
+
+
+/* function removeChildren(target){ // unused
+    for (let i = 0; i < target.children.length; i++) {
+        target.children[i].style.display = 'none';
+    }
+}
+function unique(array) { // unused
+    return Array.from(new Set(array));
+} */
+
+/* function createUpcomingSessionMenu(target){ //ADD AGE RESTRICTION
     function addSessionToList (session, ul){
         let a = document.createElement('a');
         a.innerText = title(session);
@@ -418,241 +806,4 @@ function createUpcomingSessionMenu(target){ //ADD AGE RESTRICTION
             signUpUserToSelectedSessions(currentUser)
         });//end click button
     });//end snapshot, don't put anything after
-}
-function signUpUserToSelectedSessions(user){
-    if (confirm("Valider l'inscription ?")){
-        selectedSessions.forEach(session=>{  
-            changeStatus(user,session, 'signed up');
-        });//end for each
-    }//end if  
-}
-
-//========================================= ACTION 5 (view global stats) =============================
-function viewGlobalStats(){
-
-}
-//========================================= ACTION 6 (bill) =============================
-function bill(){
-    
-}
-//########################################## GENERIC FUNCTIONS ######################################
-
-// A CHANGER
-
-function changeStatus(user, session, status){
-    console.log(`Adding ${currentUser.data().firstName} to ${status} array on ${session.data().startDate}`);
-    return db.collection('users').doc(user.id).update({
-        signedUp: firebase.firestore.FieldValue.arrayUnion(session.id)
-    })
-    .then(()=>{
-        db.collection('sessions').doc(session.id).update({
-            signedUp: firebase.firestore.FieldValue.arrayUnion(user.id)
-        })
-    })
-    .then(() => {
-        console.log("Document successfully updated!");
-    })
-    .catch((error) => {
-        console.error("Error updating document: ", error);
-    });
-}
-function createBackButton(container){
-    
-    if (document.getElementById('backButton')) {
-        document.getElementById('backButton').remove();
-    }
-    if (currentPage >0) {
-        let button = document.createElement('button');
-        button.setAttribute('id', 'backButton');
-        /* button.innerText = `Retour à la page ${currentPage-1}`; */
-        button.innerText = 'Retour';
-        container.appendChild(button);
-        button.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (currentPage > 0) {
-                lastPage = currentPage;
-                currentPage--;
-            }
-            displayPage(currentPage);
-        });
-    }
-}
-function hideChildren(target){ // unused
-    for (let i = 0; i < target.children.length; i++) {
-        target.children[i].style.display = 'none';
-    }
-}
-function unique(array) { // unused
-    return Array.from(new Set(array));
-}
-function title(session){
-    return dayjs(new Date(session.data().startTimestamp)).format("dddd D MMMM H[h]mm")
-    + " à " + session.data().location
-    + " avec " + session.data().teacher;
-}
-function displaySession(session, ul, signUp, unSignUp, modify, cancel){
-    let s = session.data();
-    let signUps = session.data().signedUp.length;
-    let li = document.createElement('div');
-    li.classList.add("session");
-    let top = document.createElement('div');
-    top.classList.add("top");
-    let bottom = document.createElement('div');
-    bottom.classList.add("bottom");
-    bottom.classList.add("hidden");
-
-    let time = document.createElement('div');
-    time.innerText = `${s.startTime} à ${s.endTime}` ;
-
-    let location = document.createElement('div');
-    location.innerText = s.location;
-
-    let spotsLeft = document.createElement('div');
-    spotsLeft.innerText = `(${signUps}/${s.maxUsers})`;
-
-    let age = document.createElement('div');
-    age.innerText = `Âges : ${s.minAge}-${s.maxAge} ans`;
-
-    let teacher = document.createElement('div');
-    teacher.innerText = `Moniteur : ${s.teacher}`;
-
-    let spots = document.createElement('div');
-    spots.innerText = `Places : ${s.maxUsers}`;
-
-    let description = document.createElement('div');
-    description.innerText = `${s.description}`;
-
-    //user list
-    let usersContainer = document.createElement('div');
-    let usersTitle = document.createElement('div');
-    usersTitle.innerText = `Inscrits :`;
-    usersTitle.style.fontWeight = 'bold';
-    usersTitle.style.marginBottom = '10px';
-    let userList = document.createElement('ul');
-    session.data().signedUp.forEach(userId =>{
-        let li = document.createElement('li');
-        db.collection('users').doc(userId).get().then(doc =>{
-            li.innerText = doc.data().firstName + " " + doc.data().lastName;
-            userList.appendChild(li);
-        });
-        
-    })
-    
-
-    let signUpButton = document.createElement('button');
-    signUpButton.innerText = "S'inscrire";
-
-    let unSignUpButton = document.createElement('button');
-    unSignUpButton.innerText = "Se désinscrire";
-
-    let modifyButton = document.createElement('button');
-    modifyButton.innerText = "Modifier";
-
-    let cancelButton = document.createElement('button');
-    cancelButton.innerText = "Annuler";
-
-    let buttons = document.createElement('div');
-    let infos = document.createElement('div');
-
-    top.appendChild(time);
-    top.appendChild(location);
-    top.appendChild(spotsLeft);
-    infos.appendChild(age);
-    infos.appendChild(teacher);
-    infos.appendChild(spots);
-    
-    if (signUp) {
-        buttons.appendChild(signUpButton);
-    }
-    if (unSignUp) {
-        buttons.appendChild(unSignUpButton);
-    }
-    if (modify) {
-        buttons.appendChild(modifyButton);
-    }
-    if (cancel) {
-        buttons.appendChild(cancelButton);
-    }
-    if (s.description) {
-        bottom.appendChild(description);
-        description.style.gridArea = '2/1/2/3';
-        description.style.marginBottom = '20px';
-    }
-    bottom.appendChild(infos)
-    infos.style.gridArea = '1/1';
-    infos.style.marginBottom = '20px';
-    bottom.appendChild(buttons);
-    buttons.style.gridArea = '1/2';
-    usersContainer.appendChild(usersTitle);
-    usersContainer.appendChild(userList);
-    bottom.appendChild(usersContainer);
-    usersContainer.style.gridArea = '3/1/3/3';
-    li.appendChild(top);
-    li.appendChild(bottom);
-    ul.appendChild(li);
-    
-    li.addEventListener('click', (e) => {
-        e.stopPropagation();
-        console.log(session.data().startDate);
-    });
-    top.addEventListener('click', (e) => {
-        e.stopPropagation();
-        bottom.classList.toggle('hidden');
-    });
-}
-
-function getUsersByStatus(status, session){
-    let resultArray = [];
-    if (session.data().users) {
-        //for all users in session
-        Object.keys(session.data().users).forEach(userId => {
-            //if user is "signed up", or other status
-            if (session.data().users[userId] == status){
-                resultArray.push(userId);
-            }
-        })
-    }
-    return resultArray;
-}
-
-function getUserSessions(past, future, user, status){
-    var resultArray = [];
-    let operator = '';
-    let date;
-    if(!future && !past){ //if nothing
-        console.log("Error: you must chose future or past sessions");
-    }else if (future && past) { //if everything
-        console.log("all");
-        operator = '>='; 
-        date = 0;
-    }else if(future && !past){ //if future
-        console.log("future");
-        operator = '>='; 
-        date = Date.now();
-    }else if(!future && past){ //if past
-        console.log("past");
-        operator = '<'; 
-        date = Date.now();
-    }
-    return db.collection('sessions').orderBy('startTimestamp').where('startTimestamp', operator, date)
-    .where(status, 'array-contains', user.id).get().then(snapshot => {
-        if (snapshot.size) {
-            console.log (`${snapshot.size} sessions found`);
-            snapshot.docs.forEach(session => {
-                console.log(session.id);
-                resultArray.push(session);
-            });//end forEach
-            return resultArray;
-        }else{
-            console.log (`No session found`);
-        }
-    });
-}
-
-
-
-// TO DO
-/*
-
-fix user issue when not parent
-*/
+} */
