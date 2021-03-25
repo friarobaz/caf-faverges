@@ -383,8 +383,6 @@ function bill(){
 }
 //########################################## GENERIC FUNCTIONS ######################################
 
-// A CHANGER
-
 
 function createBackButton(container){
     
@@ -572,6 +570,7 @@ async function displaySessionList(target, past, future, user, status, signUp, un
     var sessionsArray = [];
     var div = document.createElement('div');
     div.setAttribute('id', 'sessionList');
+    target.appendChild(div);
     var ul = document.createElement('ul');
     if (user && status) {
         let txt = document.createElement('div');
@@ -583,7 +582,6 @@ async function displaySessionList(target, past, future, user, status, signUp, un
     }
     if (sessionsArray) {
         sessionsArray.forEach(session=>{
-            console.log(document.getElementById(session.data().startDate))
             if (document.getElementById(session.data().startDate)){
                 var destination = document.getElementById(session.data().startDate);
                 
@@ -598,20 +596,15 @@ async function displaySessionList(target, past, future, user, status, signUp, un
                 var destination = li;
             }
             displaySession(session, destination, signUp, unSignUp, modify, cancel)
-            div.appendChild(ul);
-            target.appendChild(div);  
         })//end for each
-        div.appendChild(ul);
     }else{
-        console.log (`No session found`);
         let txt = document.createElement('div');
         txt.innerText = `Aucune séance trouvée`;
         txt.style.color = 'grey';
         txt.style.marginTop = '20px';
         div.appendChild(txt);
     }     
-    target.appendChild(div);     
-    console.log(document.getElementById('mardi'));  
+    div.appendChild(ul);
 }
 function getUserSessions(past, future, user, status){
     var resultArray = [];
@@ -637,7 +630,6 @@ function getUserSessions(past, future, user, status){
         if (snapshot.size) {
             console.log (`${snapshot.size} sessions found`);
             snapshot.docs.forEach(session => {
-                console.log(session.id);
                 resultArray.push(session);
             });//end forEach
             return resultArray;
@@ -670,7 +662,6 @@ function getAllSessions(past, future){//returns array of sessions
         if (snapshot.size) {
             console.log (`${snapshot.size} sessions found`);
             snapshot.docs.forEach(session => {
-                console.log(session.id);
                 resultArray.push(session);
             });//end forEach
             return resultArray;
@@ -708,7 +699,7 @@ function delSessions(){
     .get()
     .then(res => {
         res.forEach(element => {
-        if (confirm("sur?")) {
+        if (confirm("sur? ATTENTIONS !")) {
             element.ref.delete();
         }
         });
