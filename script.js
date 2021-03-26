@@ -125,7 +125,7 @@ function createPasswordForm(target, functionIfRight){
     passwordForm.appendChild(txt);
     let input = document.createElement("input");
     input.setAttribute('type', 'password');
-    input.setAttribute('inputmode', 'tel');
+    input.setAttribute('inputmode', 'numeric');
     input.setAttribute('name', 'input');
     input.setAttribute('placeholder', 'Mot de passe');
     let password = USER_TYPES[currentUserType].password;
