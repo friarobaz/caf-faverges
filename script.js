@@ -125,12 +125,14 @@ function createPasswordForm(target, functionIfRight){
     passwordForm.appendChild(txt);
     let input = document.createElement("input");
     input.setAttribute('type', 'password');
+    input.setAttribute('inputmode', 'tel');
     input.setAttribute('name', 'input');
     input.setAttribute('placeholder', 'Mot de passe');
     let password = USER_TYPES[currentUserType].password;
     if (password == "userTel") {
         password = currentUser.data().phoneNumbers[0].replace(/\s/g, '');
-        input.setAttribute('placeholder', `********${password.substring(8)}`);
+        input.setAttribute('placeholder', `••••••••${password.substring(8)}`);
+        input.style.letterSpacing = "2px";
         let help = document.createElement('div');
         help.innerHTML = `C'est votre numéro de téléphone qui fini par ${password.substring(8)}`;
         help.style.color = "grey";
