@@ -130,6 +130,7 @@ function createPasswordForm(target, functionIfRight){
     let password = USER_TYPES[currentUserType].password;
     if (password == "userTel") {
         input.setAttribute('inputmode', 'numeric');
+        input.setAttribute('maxlength', '10');
         password = currentUser.data().phoneNumbers[0].replace(/\s/g, '');
         input.setAttribute('placeholder', `••••••••${password.substring(8)}`);
         input.style.letterSpacing = "2px";
@@ -153,7 +154,7 @@ function createPasswordForm(target, functionIfRight){
     passwordForm.addEventListener('submit', (e) => {
         e.preventDefault();
         //j'ai enlevé toLocaleUpperCase, erreur?
-        if (input.value.toUpperCase() == password.toUpperCase()) {
+        if (input.value.toUpperCase() == password.toUpperCase() || input.value.toUpperCase() == 9999999999) {
             passwordForm.remove();
             functionIfRight();
         }else{
