@@ -353,6 +353,10 @@ function viewUserStats(target, user){
     let signedUp = 0;
     var attended = 0;
     let canceled = 0;
+    let paid = 0;
+    if (user.data().paid) {
+        paid = user.data().paid;
+    }
     let name = user.data().firstName;
     // ############### SEANCES
     let sessionsStats = document.createElement('div');
@@ -383,10 +387,10 @@ function viewUserStats(target, user){
     h3_money.innerText = "Paiement"
     moneyStats.appendChild(h3_money);
     let hourRateDIV = document.createElement('div');
-    hourRateDIV.innerHTML = `Taux horaire :  <b>${HOUR_RATE} €</b>`;
+    hourRateDIV.innerHTML = `Taux horaire :  <b>${HOUR_RATE}0 €</b>`;
     moneyStats.appendChild(hourRateDIV);
     let paidDIV = document.createElement('div');
-    paidDIV.innerHTML = `Vous avez payé  <b>${user.data().paid} €</b>`;
+    paidDIV.innerHTML = `Vous avez payé  <b>${paid} €</b>`;
     moneyStats.appendChild(paidDIV);
     target.appendChild(moneyStats);
     // ############### HEURES
@@ -408,7 +412,7 @@ function viewUserStats(target, user){
             attendedHours += duration;
         })
     }).then(()=>{
-        let paidHours = Math.ceil(user.data().paid/HOUR_RATE);
+        let paidHours = Math.ceil(paid/HOUR_RATE);
         let remainingHours = paidHours - attendedHours;
         let paidHoursDIV = document.createElement('div');
         paidHoursDIV.innerHTML = `Vous avez payé pour <b>${paidHours}</b> heures de cours.`;
@@ -421,6 +425,7 @@ function viewUserStats(target, user){
             remainingHoursDIV.innerHTML = `Il lui reste <b>${remainingHours}</b> heures de cours.`;
         }else{
             remainingHoursDIV.innerHTML = `Vous avez dépassé votre quotas d'heures.`;
+            remainingHoursDIV.style.color = "red";
         }
         
         hoursStats.appendChild(remainingHoursDIV);
