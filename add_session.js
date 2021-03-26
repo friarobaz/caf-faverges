@@ -229,7 +229,8 @@ function sessionObject(){
     let startDJS = dayjs(new Date(startTimestamp));
     let endDJS = dayjs(new Date(endTimestamp));
     let duration = endDJS.diff(startDJS, "hour", true);
-    let durationDays = endDJS.diff(startDJS, "day");
+    let durationDays = Math.ceil(endDJS.diff(startDJS, "day", true));
+    
     if (!duration) {
         duration = 0;
     }
