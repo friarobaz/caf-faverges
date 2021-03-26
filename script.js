@@ -4,7 +4,7 @@ const HOUR_RATE = 4.6;
 const TEACHERS = ['Jelena', 'Jules'];
 const USER_TYPES = [ // YOU CAN CHANGE NAMES BUT KEEP POSITIONS
     {name: "Administrateur", password: "admin", userSelectionNeeded: false}, //can do all actions, keep at position 0 in array
-    {name: "Parent ou élève de l'école d'escalade", userSelectionNeeded: true, authorizedActions:[3,2]},
+    {name: "Parent ou élève de l'école d'escalade", password:"userTel", userSelectionNeeded: true, authorizedActions:[3,2]},
     {name: "Moniteur", password: "m", userSelectionNeeded: true, authorizedActions:[0,1,4,5]},
     {name: "Membre du comité directeur du CAF", password: "CAF", userSelectionNeeded: false, authorizedActions:[4]},
 ] 
@@ -17,7 +17,7 @@ const ACTIONS = [
     {name: "Facturer", function: bill}, //5
     {name: "Pointer une séance", function: point}, //6
 ];
-const PAGES = [userTypeSelection, checkPassword, userSelection, userDashboard, actionPage];
+const PAGES = [userTypeSelection, userSelection, checkPassword, userDashboard, actionPage];
 const MAIN = document.getElementById("main");
 let currentUserType = null; //index
 let currentUser = null; //doc object or text
@@ -40,7 +40,11 @@ function displayPage(pageNumber){
     if (currentUserType == 1 && currentUser) {
         console.log(`Current user: ${currentUser.data().firstName} ${currentUser.data().lastName}`);
         console.log(`Id: ${currentUser.id}`);
-    }else{console.log("No user selected")};
+    }else if(currentUser){
+        console.log(`Current user: ${currentUser}`);
+    }else{
+        console.log("No user selected")
+    };
     MAIN.innerHTML = '';
     let section = document.createElement("section");
     section.setAttribute('id', `page_${pageNumber}`);
@@ -116,23 +120,38 @@ function checkPassword(target){
 function createPasswordForm(target, functionIfRight){
     console.log("Creating password form");
     let passwordForm = document.createElement("form");
-    let label = document.createElement("label");
-    label.setAttribute('for', 'input');
-    label.innerText = "Mot de passe : ";
+    let txt = document.createElement("h1");
+    txt.innerText = "Mot de passe";
+    passwordForm.appendChild(txt);
     let input = document.createElement("input");
+    input.setAttribute('type', 'password');
     input.setAttribute('name', 'input');
     input.setAttribute('placeholder', 'Mot de passe');
-    input.setAttribute('type', 'password');
+    let password = USER_TYPES[currentUserType].password;
+    if (password == "userTel") {
+        password = currentUser.data().phoneNumbers[0].replace(/\s/g, '');
+        input.setAttribute('placeholder', `********${password.substring(8)}`);
+        let help = document.createElement('div');
+        help.innerHTML = `C'est votre numéro de téléphone qui fini par ${password.substring(8)}`;
+        help.style.color = "grey";
+        help.style.marginBottom = '10px';
+        passwordForm.appendChild(help);
+    };
+    
+
+    
     let button = document.createElement("button");
     button.innerText = "OK";
-    passwordForm.appendChild(label);
+    
     passwordForm.appendChild(input);
     passwordForm.appendChild(button);
     target.appendChild(passwordForm);
     input.focus();
+    
     passwordForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        if (input.value.toLocaleUpperCase() == USER_TYPES[currentUserType].password.toUpperCase()) {
+        //j'ai enlevé toLocaleUpperCase, erreur?
+        if (input.value.toUpperCase() == password.toUpperCase()) {
             passwordForm.remove();
             functionIfRight();
         }else{
@@ -169,11 +188,10 @@ function userSelection(target){
 function createTeacherMenu(target){
     function addTeacherToList (teacherIndex, ul){
         let li = document.createElement('li');
-        let a = document.createElement('a');
-        a.innerText = TEACHERS[teacherIndex];
-        a.href = "#";
+        let button = document.createElement('button');
+        button.innerText = TEACHERS[teacherIndex];
         li.setAttribute('id', TEACHERS[teacherIndex]);
-        li.appendChild(a);
+        li.appendChild(button);
         ul.appendChild(li);
         li.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -187,7 +205,7 @@ function createTeacherMenu(target){
     }
     let container = document.createElement('div');
     container.setAttribute('id', "teacherMenu");
-    let txt = document.createElement('div');
+    let txt = document.createElement('h1');
     txt.innerText = "Quel moniteur es-tu ?";
     let ul = document.createElement('ul');
     ul.setAttribute('id', "teacherList");
