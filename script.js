@@ -186,11 +186,13 @@ function createNameList(target){
                 displayPage(currentPage)
             });
         });
+        ul.style.display = 'none';
         target.appendChild(ul);
         wait.remove();
     });  
 }
 function sortNames() {
+    document.getElementById('nameList').style.display = '';
     let input, filter, nameList, names, a, i, txtValue;
     input = document.getElementById('nameInput');
     filter = input.value.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");

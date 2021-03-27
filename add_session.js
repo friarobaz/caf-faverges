@@ -4,6 +4,7 @@ const MULTI_DAY_START_TIME = "09:00";
 const MULTI_DAY_END_TIME = "17:00";
 const TEACHERS = ["Jelena", "Jules"];
 const GROUPS = ["Tous"];
+const GROUPS = [];
 const DEFAULT_LOCATION = "SAE Faverges";
 let selectedName = "";
 let selectedSessions = [];
@@ -217,7 +218,8 @@ function sessionObject(){
     let maxUsers = form.maxUsers.value;
     let teacher = form.teacher.value;
     let multiDay = form.multiDay.checked;
-    
+    let group = form.group.value;
+
     if (multiDay) {
         startTime = MULTI_DAY_START_TIME;
         endTime = MULTI_DAY_END_TIME;
@@ -233,6 +235,9 @@ function sessionObject(){
     
     if (!duration) {
         duration = 0;
+    }
+    if (group != "Tous") {
+        minAge = 
     }
    
     return {
