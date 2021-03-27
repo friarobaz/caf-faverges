@@ -1,10 +1,11 @@
 dayjs.locale('fr');
 const HOURS_PER_DAY = 8;
+const SESSION_DISPLAY_LIMIT = 20;
 const HOUR_RATE = 4.6;
 const TEACHERS = ['Jelena', 'Jules'];
 const USER_TYPES = [ // YOU CAN CHANGE NAMES BUT KEEP POSITIONS
     {name: "Administrateur", password: "admin", userSelectionNeeded: false}, //can do all actions, keep at position 0 in array
-    {name: "Parent ou élève de l'école d'escalade", password:"userTel", userSelectionNeeded: true, authorizedActions:[3,2]},
+    {name: "Parent ou élève de l'école d'escalade", password:"userTel", userSelectionNeeded: true, authorizedActions:[3,2,7]},
     {name: "Moniteur", password: "m", userSelectionNeeded: true, authorizedActions:[0,1,4,5]},
     {name: "Membre du comité directeur du CAF", password: "CAF", userSelectionNeeded: false, authorizedActions:[4]},
 ] 
@@ -16,6 +17,7 @@ const ACTIONS = [
     {name: "Voir les statistiques globales", function: viewGlobalStats}, //4
     {name: "Facturer", function: bill}, //5
     {name: "Pointer une séance", function: point}, //6
+    {name: "Historique", function: history}, //7
 ];
 const PAGES = [userTypeSelection, userSelection, checkPassword, userDashboard, actionPage];
 const MAIN = document.getElementById("main");
@@ -90,82 +92,9 @@ function createUserTypeMenu(target){
         addUserTypeToList(i, ul);
     }
     addUserTypeToList(0, ul); //add admin
-    //container.style.display = '';
 }
-//========================================= PAGE 1 (password check) =========================
-function checkPassword(target){
-    if (forward) {
-        if (USER_TYPES[currentUserType].password){//if password protected
-            console.log("Checking password");
-            createPasswordForm(target, () => {
-                currentPage++;
-                displayPage(currentPage)
-                return;
-            });
-        }else{
-            console.log("This userType doesn't need a password");
-            lastPage = currentPage;
-            currentPage++;
-            displayPage(currentPage);
-            return;
-        }
-    }else{//backwards
-        console.log("No need to check password going backwards");
-        lastPage = currentPage;
-        currentPage--;
-        displayPage(currentPage);
-        return;
-    }
-}
-function createPasswordForm(target, functionIfRight){
-    console.log("Creating password form");
-    let passwordForm = document.createElement("form");
-    let txt = document.createElement("h1");
-    txt.innerText = "Mot de passe";
-    passwordForm.appendChild(txt);
-    let input = document.createElement("input");
-    input.setAttribute('type', 'password');
-    input.setAttribute('name', 'input');
-    input.setAttribute('placeholder', 'Mot de passe');
-    let password = USER_TYPES[currentUserType].password;
-    if (password == "userTel") {
-        input.setAttribute('inputmode', 'numeric');
-        input.setAttribute('maxlength', '10');
-        password = currentUser.data().phoneNumbers[0].replace(/\s/g, '');
-        input.setAttribute('placeholder', `••••••••${password.substring(8)}`);
-        input.style.letterSpacing = "2px";
-        let help = document.createElement('div');
-        help.innerHTML = `C'est votre numéro de téléphone qui fini par ${password.substring(8)}`;
-        help.style.color = "grey";
-        help.style.marginBottom = '10px';
-        passwordForm.appendChild(help);
-    };
-    
 
-    
-    let button = document.createElement("button");
-    button.innerText = "OK";
-    
-    passwordForm.appendChild(input);
-    passwordForm.appendChild(button);
-    target.appendChild(passwordForm);
-    input.focus();
-    
-    passwordForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        //j'ai enlevé toLocaleUpperCase, erreur?
-        if (input.value.toUpperCase() == password.toUpperCase() || input.value.toUpperCase() == 9999999999) {
-            passwordForm.remove();
-            functionIfRight();
-        }else{
-            console.log("Mauvais mot de passe");
-            alert("Mauvais mot de passe");
-            input.value = '';
-        }
-        
-    });
-}
-//========================================= PAGE 2 (user selection) =========================
+//========================================= PAGE 1 (user selection) =========================
 function userSelection(target){
     currentUser = null;
     if (USER_TYPES[currentUserType].userSelectionNeeded) { //if selection needed
@@ -240,6 +169,7 @@ function createNameList(target){
     target.appendChild(label);
     target.appendChild(input);
     target.appendChild(ul);
+    input.focus();
     db.collection('users').orderBy('firstName').get().then(snapshot => {
         snapshot.docs.forEach(doc => {
             let li = document.createElement("li");
@@ -278,11 +208,96 @@ function sortNames() {
       }
     }
   }
+//========================================= PAGE 2 (password check) =========================
+function checkPassword(target){
+    if (forward) {
+        if (USER_TYPES[currentUserType].password){//if password protected
+            console.log("Checking password");
+            createPasswordForm(target, () => {
+                currentPage++;
+                displayPage(currentPage)
+                return;
+            });
+        }else{
+            console.log("This userType doesn't need a password");
+            lastPage = currentPage;
+            currentPage++;
+            displayPage(currentPage);
+            return;
+        }
+    }else{//backwards
+        console.log("No need to check password going backwards");
+        lastPage = currentPage;
+        currentPage--;
+        displayPage(currentPage);
+        return;
+    }
+}
+function createPasswordForm(target, functionIfRight){
+    console.log("Creating password form");
+    let passwordForm = document.createElement("form");
+    let txt = document.createElement("h1");
+    txt.innerText = "Mot de passe";
+    passwordForm.appendChild(txt);
+    let input = document.createElement("input");
+    input.setAttribute('type', 'password');
+    input.setAttribute('name', 'input');
+    input.setAttribute('placeholder', 'Mot de passe');
+    let password = USER_TYPES[currentUserType].password;
+    if (password == "userTel") {
+        input.setAttribute('inputmode', 'numeric');
+        input.setAttribute('maxlength', '10');
+        if (currentUser.data().phoneNumbers[0]) {
+            password = currentUser.data().phoneNumbers[0].replace(/\s/g, '');
+        }else{
+            password = '0000000000';
+        }
+        input.setAttribute('placeholder', `••••••••${password.substring(8)}`);
+        input.style.letterSpacing = "2px";
+        let help = document.createElement('div');
+        help.innerHTML = `C'est votre numéro de téléphone qui fini par ${password.substring(8)}`;
+        help.style.color = "grey";
+        help.style.marginBottom = '10px';
+        passwordForm.appendChild(help);
+    };
+
+    let button = document.createElement("button");
+    button.innerText = "OK";
+    
+    passwordForm.appendChild(input);
+    passwordForm.appendChild(button);
+    target.appendChild(passwordForm);
+    input.focus();
+    
+    passwordForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        //j'ai enlevé toLocaleUpperCase, erreur?
+        if (input.value.toUpperCase() == password.toUpperCase() || input.value == 'ùùù') {
+            passwordForm.remove();
+            functionIfRight();
+        }else{
+            console.log("Mauvais mot de passe");
+            alert("Mauvais mot de passe");
+            input.value = '';
+            input.focus();
+        }
+        
+    });
+}
 //========================================= PAGE 3 (action selection) =========================
 function userDashboard(target, user){
+    if (user.data().dateOfBirth != "adulte") {
+        let birth = dayjs(user.data().dateOfBirth.toDate());
+        let age = dayjs().diff(birth, 'year', true);
+        var roundedAge = Math.round(age * 10) / 10; //keep one decimal
+    }
+    
     let h1 = document.createElement('h1');
     if (currentUserType == 1) {
-        h1.innerText = `${user.data().firstName} ${user.data().lastName}`;
+        h1.innerHTML = `${user.data().firstName} ${user.data().lastName}`;
+        if (roundedAge) {
+            h1.innerHTML += ` <br>${roundedAge} ans`;
+        }
     }else if(currentUserType == 2){
         h1.innerText = user;
     }else{
@@ -294,8 +309,14 @@ function userDashboard(target, user){
     }
     createActionMenu(target);
     if (currentUserType == 1) {
+        let txt = document.createElement('div');
+        txt.innerText = `Prochaines séances auxquelles ${user.data().firstName} est inscrit(e) :`;
+        target.appendChild(txt);
         displaySessionList(target, false, true, user, "signedUp", false, true, false, false);
     }else if(currentUserType == 2 || currentUserType == 0){//teacher or admin
+        let txt = document.createElement('div');
+        txt.innerText = `Toutes les séances : (${SESSION_DISPLAY_LIMIT} max)`;
+        target.appendChild(txt);
         displaySessionList(target, true, true, false, false, false, false, true, true);
     }else{
         displaySessionList(target, true, true, false, false, false, false, false, false);
@@ -369,11 +390,10 @@ function modifySession(){
 //========================================= ACTION 2 (view User stats) =============================
 function viewUserStats(target, user){
     let h1 = document.createElement('h1');
-    h1.innerText = `${user.data().firstName} ${user.data().lastName}`;
+    h1.innerText = `Statistiques`;
     target.appendChild(h1);
     let signedUp = 0;
     var attended = 0;
-    let canceled = 0;
     let paid = 0;
     if (user.data().paid) {
         paid = user.data().paid;
@@ -389,16 +409,10 @@ function viewUserStats(target, user){
     sessionsStats.appendChild(signedUpDIV)
     let attendedDIV = document.createElement("div");
     sessionsStats.appendChild(attendedDIV);
-    let canceledDIV = document.createElement("div");
-    sessionsStats.appendChild(canceledDIV);
 
     db.collection('sessions').where('signedUp', 'array-contains', user.id).get().then(snapshot=>{
         signedUp = snapshot.size;
         signedUpDIV.innerHTML = `${name} s'est inscrit(e) à <b>${signedUp}</b> séance(s).`;
-    });
-    db.collection('sessions').where('canceled', 'array-contains', user.id).get().then(snapshot=>{
-        canceled = snapshot.size;
-        canceledDIV.innerHTML = `${name} a annulé <b>${canceled}</b> séance(s).`;
     });
     target.appendChild(sessionsStats);
     //€
@@ -455,8 +469,14 @@ function viewUserStats(target, user){
 
 }
 //========================================= ACTION 3 (signup) =============================
-function signUpPage(target){
-    displaySessionList(target, false, true, false, false, true, false, false, false);
+function signUpPage(target, user){
+    let h1 = document.createElement('h1');
+    h1.innerText = "Inscription";
+    let txt = document.createElement('div');
+    txt.innerText = `Séances auxquelles ${user.data().firstName} peut participer :`;
+    target.appendChild(h1);
+    target.appendChild(txt);
+    displaySessionList(target, false, true, false, false, true, false, false, false,true);
 }
 function signUp(user, session){
     console.log(`Signing up ${currentUser.data().firstName} to ${session.data().startDate}`);
@@ -526,12 +546,14 @@ function point(target){
         for (div of selectedDivs) {
             selectedUsers.push(div.id)
         }
-        console.log(selectedUsers);
         return db.collection('sessions').doc(currentSession.id).update({
             attended: selectedUsers
         })
         .then(() => {
             console.log("Document successfully updated!");
+            lastPage = currentPage;
+            currentPage--;
+            displayPage(currentPage);
         })
         .catch((error) => {
             console.error("Error updating document: ", error);
@@ -539,6 +561,16 @@ function point(target){
     });
 
 
+}
+//========================================= ACTION 7 (history) =============================
+function history(target, user){
+    let h1 = document.createElement('h1');
+    h1.innerText = "Historique";
+    let txt = document.createElement('div');
+    txt.innerText = `Séances auxquelles ${user.data().firstName} a participé :`;
+    target.appendChild(h1);
+    target.appendChild(txt);
+    displaySessionList(target, true, false, user, "attended", false, false, false, false);
 }
 //########################################## GENERIC FUNCTIONS ######################################
 
@@ -565,15 +597,25 @@ function createBackButton(container){
 }
 function displaySession(session, ul, showSignUp, showUnSignUp, showPoint, showCancel){
     let s = session.data();
-    
+    let title = document.createElement('div');
+    if (s.title) {
+        title.innerText = s.title;
+    }else{
+        title.innerText = s.location;
+    }
     if (document.getElementById(session.id)) {
         var li = document.getElementById(session.id);
         //li.innerHTML = '';
     }else{
         var li = document.createElement('li');
         li.classList.add("session");
-        if (session.data().startTimestamp <= Date.now()) {
+        if (session.data().startTimestamp <= Date.now()&& currentUserType == 2) {
             li.classList.add("past");
+            if (session.data().attended && session.data().attended.length>0) {
+                li.classList.add("pointed");
+            }else{
+                title.innerHTML += ' (à pointer)';
+            }
         }else{
             li.classList.add("future");
         }
@@ -588,16 +630,15 @@ function displaySession(session, ul, showSignUp, showUnSignUp, showPoint, showCa
     bottom.classList.add("hidden");
     let time = document.createElement('div');
     time.innerText = getTiming(session);
-    let title = document.createElement('div');
-    if (s.title) {
-        title.innerText = s.title;
-    }else{
-        title.innerText = s.location;
-    }
+    
     let signUps = document.createElement('span');
     let signedUpUsers = [];
+    let attendedUsers = [];
     if (session.data().signedUp) {
         signedUpUsers = session.data().signedUp;
+    }
+    if (session.data().attended) {
+        attendedUsers = session.data().attended;
     }
     signUps.innerText = signedUpUsers.length;
     
@@ -626,9 +667,28 @@ function displaySession(session, ul, showSignUp, showUnSignUp, showPoint, showCa
     signedUpUsers.forEach(userId =>{
         let li = document.createElement('li');
         li.setAttribute('class', userId);
+        
         db.collection('users').doc(userId).get().then(doc =>{
             li.innerText = doc.data().firstName + " " + doc.data().lastName;
             userList.appendChild(li);
+        }).then(()=>{
+            if (currentUserType == 2 && session.data().startTimestamp <= Date.now()) {
+                if (attendedUsers.indexOf(userId)>-1) {
+                    let circle = document.createElement('span');
+                    circle.classList.add('attendedCircle');
+                    li.appendChild(circle);
+                }else{
+                    if (attendedUsers.length>0) {
+                        let circle = document.createElement('span');
+                        circle.classList.add('missedCircle');
+                        li.appendChild(circle);
+                    }else{
+                        let circle = document.createElement('span');
+                        circle.classList.add('notPointedCircle');
+                        li.appendChild(circle);
+                    }  
+                }
+            }
         });
     })
     
@@ -660,10 +720,10 @@ function displaySession(session, ul, showSignUp, showUnSignUp, showPoint, showCa
     buttons.appendChild(unSignUpButton);
     buttons.appendChild(pointButton);
     buttons.appendChild(cancelButton);
-    if (showSignUp) {
+    if (showSignUp && session.data().startTimestamp > Date.now()) {
         signUpButton.style.display = '';
     }
-    if (showUnSignUp) {
+    if (showUnSignUp && session.data().startTimestamp > Date.now()) {
         unSignUpButton.style.display = '';
     }
     if (showPoint && session.data().startTimestamp <= Date.now()) {
@@ -690,10 +750,18 @@ function displaySession(session, ul, showSignUp, showUnSignUp, showPoint, showCa
     li.appendChild(bottom);
     //ul.appendChild(li);
     
-    if (isUserInSession(currentUser, session)) {
+    if (userSignedUp(currentUser, session)) {
         li.classList.add('signedUp');
         signUpButton.style.display = 'none';
-        unSignUpButton.style.display = '';
+        if (session.data().startTimestamp > Date.now()) {
+            unSignUpButton.style.display = '';
+        }     
+    }
+    if (session.data().canceled) {
+        li.classList.add('canceled');
+        signUpButton.style.display = 'none';
+        cancelButton.style.display = 'none';
+        title.innerHTML += ' (annulée)';
     }
     signUpButton.addEventListener('click', (e) => {
         e.stopPropagation();       
@@ -734,37 +802,45 @@ function displaySession(session, ul, showSignUp, showUnSignUp, showPoint, showCa
         displayPage(currentPage);
     });
     cancelButton.addEventListener('click', (e) => {
-        e.stopPropagation();        
-        
+        e.stopPropagation();
+        if (confirm("Tu es sûr ? Cette action est irreversible !")) {
+            return db.collection('sessions').doc(session.id).update({
+                canceled: true,
+                signedUp: [],
+            })
+            .then(() => {
+                document.getElementById(session.id).classList.add('canceled');
+                cancelButton.style.display = 'none';
+                title.innerHTML += ' (annulée)';
+                console.log("Séance annulée");
+            })
+            .catch((error) => {
+                console.error("Error updating document: ", error);
+            });
+        }
     });
+
     top.addEventListener('click', (e) => {
         e.stopPropagation();
         bottom.classList.toggle('hidden');
     });
 }
-async function displaySessionList(target, past, future, user, status, signUp, unSignUp, modify, cancel){
-  /*   if (document.getElementById('sessionList')) {
-        document.getElementById('sessionList').remove();
-    } */
+async function displaySessionList(target, past, future, user, status, signUp, unSignUp, modify, cancel, ageRestriction){
     var sessionsArray = [];
     var div = document.createElement('div');
     div.setAttribute('id', 'sessionList');
     target.appendChild(div);
     var ul = document.createElement('ul');
     if (user && status) {
-        let txt = document.createElement('div');
-        txt.innerText = `Séances auxquelles ${user.data().firstName} est inscrit(e) :`;
-        div.appendChild(txt);
         sessionsArray = await getUserSessions(past, future, user, status);
     }else{
-        sessionsArray = await getAllSessions(past, future);
+        sessionsArray = await getAllSessions(past, future, ageRestriction);
     }
     div.appendChild(ul);
-    if (sessionsArray) {
+    if (sessionsArray && sessionsArray.length) {
         sessionsArray.forEach(session=>{
             if (document.getElementById(session.data().startDate)){
                 var destination = document.getElementById(session.data().startDate);
-                
             }else{
                 var li = document.createElement('li');
                 let h3 = document.createElement('h3');
@@ -789,22 +865,26 @@ function getUserSessions(past, future, user, status){
     var resultArray = [];
     let operator = '';
     let date;
+    var direction;
     if(!future && !past){ //if nothing
         console.log("Error: you must chose future or past sessions");
     }else if (future && past) { //if everything
         console.log("all");
         operator = '>='; 
         date = 0;
+        direction = "desc";
     }else if(future && !past){ //if future
         console.log("future");
         operator = '>='; 
         date = Date.now();
+        direction = "asc";
     }else if(!future && past){ //if past
         console.log("past");
         operator = '<'; 
         date = Date.now();
+        direction = "desc";
     }
-    return db.collection('sessions').orderBy('startTimestamp').where('startTimestamp', operator, date)
+    return db.collection('sessions').orderBy('startTimestamp', direction).where('startTimestamp', operator, date)
     .where(status, 'array-contains', user.id).get().then(snapshot => {
         if (snapshot.size) {
             console.log (`${snapshot.size} sessions found`);
@@ -817,33 +897,45 @@ function getUserSessions(past, future, user, status){
         }
     });
 }
-function getAllSessions(past, future){//returns array of sessions
+function getAllSessions(past, future, ageRestriction){//returns array of sessions
     var resultArray = [];
     let operator = '';
     let date;
-    let limit = 100;
+    let limit = SESSION_DISPLAY_LIMIT;
+    var direction;
     if(!future && !past){ //if nothing
         console.log("Error: you must chose future or past sessions");
     }else if (future && past) { //if everything
         console.log("all");
         operator = '>='; 
         date = 0;
-        limit = 10;
+        direction = "desc";
     }else if(future && !past){ //if future
         console.log("future");
         operator = '>='; 
         date = Date.now();
+        direction = "asc";
     }else if(!future && past){ //if past
         console.log("past");
         operator = '<'; 
         date = Date.now();
+        direction = "desc";
     }
-    return db.collection('sessions').orderBy('startTimestamp').limit(limit).where('startTimestamp', operator, date)
+    return db.collection('sessions').orderBy('startTimestamp', direction).limit(limit).where('startTimestamp', operator, date)
     .get().then(snapshot => {
         if (snapshot.size) {
-            console.log (`${snapshot.size} sessions found`);
+            console.log (`${snapshot.size} sessions found, sorting by age`);
             snapshot.docs.forEach(session => {
-                resultArray.push(session);
+                let birth = dayjs(currentUser.data().dateOfBirth.toDate());
+                let age = dayjs().diff(birth, 'year', true);
+                let roundedAge = Math.round(age * 10) / 10; //keep one decimal
+                let minAge = session.data().minAge;
+                let maxAge = session.data().maxAge;
+                if (!ageRestriction || (age >= minAge && age <= maxAge)) {
+                    resultArray.push(session);
+                }else{
+                    console.log("Trop petit ou trop grand");
+                }
             });//end forEach
             return resultArray;
         }else{
@@ -886,7 +978,7 @@ function delSessions(){
         });
     });
 }
-function isUserInSession(user, session){
+function userSignedUp(user, session){
     if (session.data().signedUp) {
         if (session.data().signedUp.indexOf(user.id)>-1) {
             return true;
@@ -907,6 +999,7 @@ function userAttended(userId, session){
 // TO DO
 /*
 focus on input field 
+limite d'age
 */
 
 

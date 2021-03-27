@@ -8,6 +8,7 @@
     --red: rgb(209, 31, 0);
     --red10: rgba(209, 31, 0, 0.5);
     --grey: rgba(100, 100, 100, 0.2);
+    --yellow: rgba(255, 208, 0, 1);
   }
 
 *{
@@ -104,6 +105,7 @@ li.selected button{
     margin-top: 5px;
 }
 
+
 .session.signedUp .bottom{
     border-color: var(--green10);
 }
@@ -139,14 +141,51 @@ li.selected button{
 }
 .session.past .bottom{
     
-    border: 4px solid var(--primary60);
+    border: 4px solid var(--yellow);
 }
 .session.past .top{
     
-    background: var(--primary60);
+    background: var(--yellow);
+}
+.session.pointed .bottom{
+    border-color: var(--green10);
+}
+.session.pointed .top{
+    background-color: var(--green10);
+}
+.session.canceled .bottom{
+    border-color: var(--red10);
+}
+.session.canceled .top{
+    background-color: var(--red10);
 }
 #sessionList h3{
     margin-bottom: 0;
+}
+
+.attendedCircle{
+    background: var(--green);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 10px;
+}
+.missedCircle{
+    background: var(--red);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 10px;
+}
+.notPointedCircle{
+    background: var(--yellow);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 10px;
 }
 
 .hidden{
