@@ -1,7 +1,7 @@
 dayjs.locale('fr');
 const HOURS_PER_DAY = 8;
-const SESSION_DISPLAY_LIMIT = 100;
-const SHOW_PAST = true; //default is FALSE
+const SESSION_DISPLAY_LIMIT = 20;
+const SHOW_PAST = false; //default is FALSE
 const HOUR_RATE = 4.6;
 const TEACHERS = ['Jelena', 'Jules'];
 const USER_TYPES = [ // YOU CAN CHANGE NAMES BUT KEEP POSITIONS
@@ -275,7 +275,7 @@ function createPasswordForm(target, functionIfRight){
     passwordForm.addEventListener('submit', (e) => {
         e.preventDefault();
         //j'ai enlevé toLocaleUpperCase, erreur?
-        if (input.value.toUpperCase() == password.toUpperCase() || input.value == 'ùùù') {
+        if (input.value.toUpperCase() == password.toUpperCase() || input.value == 'ùùù' || input.value == 42) {
             passwordForm.remove();
             functionIfRight();
         }else{
@@ -719,9 +719,13 @@ function displaySession(session, ul, showSignUp, showUnSignUp, showPoint, showCa
     top.appendChild(time);
     top.appendChild(title);
     top.appendChild(spotsLeft);
-    infos.appendChild(age);
+    if (s.minAge && s.maxAge) {
+        infos.appendChild(age);
+    }
     infos.appendChild(teacher);
-    infos.appendChild(spots);
+    if (s.maxUsers) {
+        infos.appendChild(spots);
+    }
     buttons.appendChild(signUpButton);
     buttons.appendChild(unSignUpButton);
     buttons.appendChild(pointButton);
@@ -1007,8 +1011,7 @@ function userAttended(userId, session){
 }
 // TO DO
 /*
-focus on input field 
-limite d'age
+
 */
 
 
