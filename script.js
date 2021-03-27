@@ -674,9 +674,6 @@ function displaySession(session, ul, showSignUp, showUnSignUp, showPoint, showCa
         li.setAttribute('class', userId);
         
         db.collection('users').doc(userId).get().then(doc =>{
-            li.innerText = doc.data().firstName + " " + doc.data().lastName;
-            userList.appendChild(li);
-        }).then(()=>{
             if (currentUserType == 2 && session.data().startTimestamp <= Date.now()) {
                 if (attendedUsers.indexOf(userId)>-1) {
                     let circle = document.createElement('span');
@@ -688,12 +685,16 @@ function displaySession(session, ul, showSignUp, showUnSignUp, showPoint, showCa
                         circle.classList.add('missedCircle');
                         li.appendChild(circle);
                     }else{
-                        let circle = document.createElement('span');
+                        /* let circle = document.createElement('span');
                         circle.classList.add('notPointedCircle');
-                        li.appendChild(circle);
+                        li.appendChild(circle); */
                     }  
                 }
             }
+            li.innerHTML += doc.data().firstName + " " + doc.data().lastName;
+            userList.appendChild(li);
+        }).then(()=>{
+           
         });
     })
     

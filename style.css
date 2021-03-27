@@ -169,7 +169,7 @@ li.selected button{
     height: 10px;
     border-radius: 50%;
     display: inline-block;
-    margin-left: 10px;
+    margin-right: 10px;
 }
 .missedCircle{
     background: var(--red);
@@ -177,7 +177,7 @@ li.selected button{
     height: 10px;
     border-radius: 50%;
     display: inline-block;
-    margin-left: 10px;
+    margin-right: 10px;
 }
 .notPointedCircle{
     background: var(--yellow);
@@ -185,7 +185,7 @@ li.selected button{
     height: 10px;
     border-radius: 50%;
     display: inline-block;
-    margin-left: 10px;
+    margin-right: 10px;
 }
 
 .hidden{
