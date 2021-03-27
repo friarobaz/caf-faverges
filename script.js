@@ -1,6 +1,7 @@
 dayjs.locale('fr');
 const HOURS_PER_DAY = 8;
-const SESSION_DISPLAY_LIMIT = 20;
+const SESSION_DISPLAY_LIMIT = 100;
+const SHOW_PAST = true; //default is FALSE
 const HOUR_RATE = 4.6;
 const TEACHERS = ['Jelena', 'Jules'];
 const USER_TYPES = [ // YOU CAN CHANGE NAMES BUT KEEP POSITIONS
@@ -288,7 +289,7 @@ function createPasswordForm(target, functionIfRight){
 }
 //========================================= PAGE 3 (action selection) =========================
 function userDashboard(target, user){
-    if (user.data().dateOfBirth != "adulte") {
+    if (currentUserType ==1 && user.data().dateOfBirth != "adulte") {
         let birth = dayjs(user.data().dateOfBirth.toDate());
         let age = dayjs().diff(birth, 'year', true);
         var roundedAge = Math.round(age * 10) / 10; //keep one decimal
@@ -314,12 +315,12 @@ function userDashboard(target, user){
         let txt = document.createElement('div');
         txt.innerText = `Prochaines séances auxquelles ${user.data().firstName} est inscrit(e) :`;
         target.appendChild(txt);
-        displaySessionList(target, false, true, user, "signedUp", false, true, false, false);
+        displaySessionList(target, SHOW_PAST, true, user, "signedUp", false, true, false, false);
     }else if(currentUserType == 2 || currentUserType == 0){//teacher or admin
         let txt = document.createElement('div');
         txt.innerText = `Toutes les séances : (${SESSION_DISPLAY_LIMIT} max)`;
         target.appendChild(txt);
-        displaySessionList(target, true, true, false, false, false, false, true, true);
+        displaySessionList(target, true, true, false, false, false, false, true, true, false);
     }else{
         displaySessionList(target, true, true, false, false, false, false, false, false);
     }
@@ -478,7 +479,7 @@ function signUpPage(target, user){
     txt.innerText = `Séances auxquelles ${user.data().firstName} peut participer :`;
     target.appendChild(h1);
     target.appendChild(txt);
-    displaySessionList(target, false, true, false, false, true, false, false, false,true);
+    displaySessionList(target, SHOW_PAST, true, false, false, true, false, false, false,true);
 }
 function signUp(user, session){
     console.log(`Signing up ${currentUser.data().firstName} to ${session.data().startDate}`);
@@ -647,7 +648,9 @@ function displaySession(session, ul, showSignUp, showUnSignUp, showPoint, showCa
     signUps.classList.add('signUps');
     let spotsLeft = document.createElement('div');
     let maxUsers = document.createElement('span');
-    maxUsers.innerText = `/${s.maxUsers}`;
+    if (s.maxUsers) {
+        maxUsers.innerText = `/${s.maxUsers}`;
+    }
     spotsLeft.appendChild(signUps);
     spotsLeft.appendChild(maxUsers);
     let age = document.createElement('div');
@@ -722,10 +725,10 @@ function displaySession(session, ul, showSignUp, showUnSignUp, showPoint, showCa
     buttons.appendChild(unSignUpButton);
     buttons.appendChild(pointButton);
     buttons.appendChild(cancelButton);
-    if (showSignUp && session.data().startTimestamp > Date.now()) {
+    if (showSignUp && (session.data().startTimestamp > Date.now() || SHOW_PAST)) {
         signUpButton.style.display = '';
     }
-    if (showUnSignUp && session.data().startTimestamp > Date.now()) {
+    if (showUnSignUp && (session.data().startTimestamp > Date.now() || SHOW_PAST)) {
         unSignUpButton.style.display = '';
     }
     if (showPoint && session.data().startTimestamp <= Date.now()) {
@@ -928,15 +931,18 @@ function getAllSessions(past, future, ageRestriction){//returns array of session
         if (snapshot.size) {
             console.log (`${snapshot.size} sessions found, sorting by age`);
             snapshot.docs.forEach(session => {
-                let birth = dayjs(currentUser.data().dateOfBirth.toDate());
-                let age = dayjs().diff(birth, 'year', true);
-                let roundedAge = Math.round(age * 10) / 10; //keep one decimal
-                let minAge = session.data().minAge;
-                let maxAge = session.data().maxAge;
-                if (!ageRestriction || (age >= minAge && age <= maxAge)) {
-                    resultArray.push(session);
+                if (ageRestriction && session.data().minAge && session.data().maxAge) {
+                    let birth = dayjs(currentUser.data().dateOfBirth.toDate());
+                    var age = dayjs().diff(birth, 'year', true);
+                    var minAge = session.data().minAge;
+                    var maxAge = session.data().maxAge;
+                    if (age >= minAge && age <= maxAge) {
+                        
+                    }else{
+                        console.log("Trop petit ou trop grand");
+                    }
                 }else{
-                    console.log("Trop petit ou trop grand");
+                    resultArray.push(session);
                 }
             });//end forEach
             return resultArray;
