@@ -8,7 +8,7 @@ const USER_TYPES = [ // YOU CAN CHANGE NAMES BUT KEEP POSITIONS
     {name: "Administrateur", password: "admin42", userSelectionNeeded: false}, //can do all actions, keep at position 0 in array
     {name: "Parent ou élève de l'école d'escalade", password:"userTel", userSelectionNeeded: true, authorizedActions:[3,2,7]},
     {name: "Moniteur", password: "grigri", userSelectionNeeded: true, authorizedActions:[]},
-    {name: "Membre du comité directeur du CAF", password: "CAF", userSelectionNeeded: false, authorizedActions:[]},
+    {name: "Membre du comité directeur du CAF", password: "faverges", userSelectionNeeded: false, authorizedActions:[]},
 ] 
 const ACTIONS = [
     {name: "Créer une séance", function: createSession}, //0
