@@ -322,6 +322,9 @@ function userDashboard(target, user){
         target.appendChild(txt);
         displaySessionList(target, true, true, false, false, false, false, true, true, false);
     }else{
+        let txt = document.createElement('div');
+        txt.innerText = `Toutes les séances : (${SESSION_DISPLAY_LIMIT} max)`;
+        target.appendChild(txt);
         displaySessionList(target, true, true, false, false, false, false, false, false);
     }
     
