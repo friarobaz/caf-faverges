@@ -5,7 +5,7 @@ const SHOW_PAST = false; //default is FALSE
 const HOUR_RATE = 4.6;
 const TEACHERS = ['Jelena', 'Jules'];
 const USER_TYPES = [ // YOU CAN CHANGE NAMES BUT KEEP POSITIONS
-    {name: "Administrateur", password: "admin", userSelectionNeeded: false}, //can do all actions, keep at position 0 in array
+    {name: "Administrateur", password: "admin42", userSelectionNeeded: false}, //can do all actions, keep at position 0 in array
     {name: "Parent ou élève de l'école d'escalade", password:"userTel", userSelectionNeeded: true, authorizedActions:[3,2,7]},
     {name: "Moniteur", password: "grigri", userSelectionNeeded: true, authorizedActions:[]},
     {name: "Membre du comité directeur du CAF", password: "CAF", userSelectionNeeded: false, authorizedActions:[]},
@@ -955,9 +955,11 @@ function getAllSessions(past, future, ageRestriction){//returns array of session
                     console.log("Sorting by age");
                     let birth = dayjs(currentUser.data().dateOfBirth.toDate());
                     var age = dayjs().diff(birth, 'year', true);
+                    var roundedAge = Math.round(age * 10) / 10;
                     var minAge = session.data().minAge;
                     var maxAge = session.data().maxAge;
-                    if (age >= minAge && age <= maxAge) {
+                    if (roundedAge >= minAge && age <= maxAge) {
+                        console.log(age);
                         resultArray.push(session);
                     }else{
                         console.log("Trop petit ou trop grand");
