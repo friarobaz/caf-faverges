@@ -409,7 +409,7 @@ function viewUserStats(target, user){
     h3_sessions.innerText = "Séances"
     sessionsStats.appendChild(h3_sessions);
     let signedUpDIV = document.createElement("div");
-    sessionsStats.appendChild(signedUpDIV)
+    //sessionsStats.appendChild(signedUpDIV)
     let attendedDIV = document.createElement("div");
     sessionsStats.appendChild(attendedDIV);
 
