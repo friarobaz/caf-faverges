@@ -7,8 +7,8 @@ const TEACHERS = ['Jelena', 'Jules'];
 const USER_TYPES = [ // YOU CAN CHANGE NAMES BUT KEEP POSITIONS
     {name: "Administrateur", password: "admin", userSelectionNeeded: false}, //can do all actions, keep at position 0 in array
     {name: "Parent ou élève de l'école d'escalade", password:"userTel", userSelectionNeeded: true, authorizedActions:[3,2,7]},
-    {name: "Moniteur", password: "m", userSelectionNeeded: true, authorizedActions:[0,1,4,5]},
-    {name: "Membre du comité directeur du CAF", password: "CAF", userSelectionNeeded: false, authorizedActions:[4]},
+    {name: "Moniteur", password: "grigri", userSelectionNeeded: true, authorizedActions:[]},
+    {name: "Membre du comité directeur du CAF", password: "CAF", userSelectionNeeded: false, authorizedActions:[]},
 ] 
 const ACTIONS = [
     {name: "Créer une séance", function: createSession}, //0
@@ -651,6 +651,11 @@ function displaySession(session, ul, showSignUp, showUnSignUp, showPoint, showCa
     if (s.maxUsers) {
         maxUsers.innerText = `/${s.maxUsers}`;
     }
+    if (s.maxUsers!="" && s.maxUsers > signedUpUsers.length) {
+        spotsLeft.style.color = 'green';
+    }else if(s.maxUsers!="" && s.maxUsers <= signedUpUsers.length){
+        spotsLeft.style.color = 'red';
+    }
     spotsLeft.appendChild(signUps);
     spotsLeft.appendChild(maxUsers);
     let age = document.createElement('div');
@@ -731,7 +736,13 @@ function displaySession(session, ul, showSignUp, showUnSignUp, showPoint, showCa
     buttons.appendChild(pointButton);
     buttons.appendChild(cancelButton);
     if (showSignUp && (session.data().startTimestamp > Date.now() || SHOW_PAST)) {
-        signUpButton.style.display = '';
+        if (s.maxUsers>signedUpUsers.length) {
+            signUpButton.style.display = '';
+        }else{
+            unSignUpButton.innerText = "Séance complète";
+            unSignUpButton.disabled = true;
+            unSignUpButton.style.display = '';
+        }
     }
     if (showUnSignUp && (session.data().startTimestamp > Date.now() || SHOW_PAST)) {
         unSignUpButton.style.display = '';
@@ -925,6 +936,7 @@ function getAllSessions(past, future, ageRestriction){//returns array of session
         operator = '>='; 
         date = Date.now();
         direction = "asc";
+        limit = 100;
     }else if(!future && past){ //if past
         console.log("past");
         operator = '<'; 
@@ -934,19 +946,21 @@ function getAllSessions(past, future, ageRestriction){//returns array of session
     return db.collection('sessions').orderBy('startTimestamp', direction).limit(limit).where('startTimestamp', operator, date)
     .get().then(snapshot => {
         if (snapshot.size) {
-            console.log (`${snapshot.size} sessions found, sorting by age`);
+            console.log (`${snapshot.size} sessions found`);
             snapshot.docs.forEach(session => {
                 if (ageRestriction && session.data().minAge && session.data().maxAge) {
+                    console.log("Sorting by age");
                     let birth = dayjs(currentUser.data().dateOfBirth.toDate());
                     var age = dayjs().diff(birth, 'year', true);
                     var minAge = session.data().minAge;
                     var maxAge = session.data().maxAge;
                     if (age >= minAge && age <= maxAge) {
-                        
+                        resultArray.push(session);
                     }else{
                         console.log("Trop petit ou trop grand");
                     }
                 }else{
+                    console.log("No age restriction")
                     resultArray.push(session);
                 }
             });//end forEach
@@ -1011,7 +1025,7 @@ function userAttended(userId, session){
 }
 // TO DO
 /*
-
+LIMITE DE NOMBRE DE PAX PAR SEANCE
 */
 
 
