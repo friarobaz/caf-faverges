@@ -1,14 +1,14 @@
 dayjs.locale('fr');
 const HOURS_PER_DAY = 8;
-const SESSION_DISPLAY_LIMIT = 100;
+const SESSION_DISPLAY_LIMIT = 20;
 const SHOW_PAST = false; //default is FALSE
 const HOUR_RATE = 4.6;
 const TEACHERS = ['Jelena', 'Jules'];
 const USER_TYPES = [ // YOU CAN CHANGE NAMES BUT KEEP POSITIONS
     {name: "Administrateur", password: "admin42", userSelectionNeeded: false}, //can do all actions, keep at position 0 in array
     {name: "Parent ou élève de l'école d'escalade", password:"userTel", userSelectionNeeded: true, authorizedActions:[3,2,7]},
-    {name: "Moniteur", password: "grigri", userSelectionNeeded: true, authorizedActions:[]},
-    {name: "Membre du comité directeur du CAF", password: "faverges", userSelectionNeeded: false, authorizedActions:[]},
+    {name: "Moniteur", password: "grigri", userSelectionNeeded: true, authorizedActions:[8]},
+    {name: "Membre du comité directeur du CAF", password: "faverges", userSelectionNeeded: false, authorizedActions:[8]},
 ] 
 const ACTIONS = [
     {name: "Créer une séance", function: createSession}, //0
@@ -19,17 +19,20 @@ const ACTIONS = [
     {name: "Facturer", function: bill}, //5
     {name: "Pointer une séance", function: point}, //6
     {name: "Historique", function: history}, //7
+    {name: "Trésorerie", function: moneyManagement}, //8
 ];
-const PAGES = [userTypeSelection, userSelection, checkPassword, userDashboard, actionPage];
+const PAGES = [userTypeSelection, userSelection, checkPassword, userDashboard, actionPage, inputPage];
 const MAIN = document.getElementById("main");
 let currentUserType = null; //index
 let currentUser = null; //doc object or text
 let currentAction = null; //index
 let currentSession = null //doc object
 let currentPage = 0;
+let currentField = "";
 let lastPage = 0;
 let forward = true;
 let selectedSessions = [];//array of doc objects
+let memoryTable;
 //####################################################################################################################
 displayPage(0);
 
@@ -287,7 +290,7 @@ function createPasswordForm(target, functionIfRight){
         
     });
 }
-//========================================= PAGE 3 (action selection) =========================
+//========================================= PAGE 3 (User dashboard) =========================
 function userDashboard(target, user){
     if (currentUserType ==1 && user.data().dateOfBirth != "adulte") {
         let birth = dayjs(user.data().dateOfBirth.toDate());
@@ -380,6 +383,52 @@ function actionPage(target, user){
     console.log("action selected: "+ACTIONS[currentAction].name);
     ACTIONS[currentAction].function(target, user);
 }
+//========================================= PAGE 5 (input page) =============================
+function inputPage(target, user){
+    let u = user.data();
+    let form = document.createElement('form');
+    let txt = document.createElement('h2');
+    txt.innerHTML = `${u.firstName} ${u.lastName}`;
+    let input = document.createElement('input');
+    let label = document.createElement('label');
+    label.setAttribute = ('for', 'input');
+    
+    let description = '';
+    if (currentField == "charged") {
+        description = "Montant encaissé par le CAF";
+    }else if (currentField == "paid") {
+        description = "Montant des chèques donnés par les parents";
+    }
+    label.innerHTML = (`${description} : <br><br>`);
+    if (u[currentField]) {
+        input.value = u[currentField];
+    }
+    let submit = document.createElement('button');
+    submit.innerText = "Valider";
+    form.appendChild(txt);
+    form.appendChild(label);
+    form.appendChild(input);
+    form.appendChild(submit);
+    target.appendChild(form);
+    input.focus();
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        console.log(`Changing ${currentField} to ${input.value} for ${user.data().firstName}`);
+        return db.collection('users').doc(user.id).update({
+            [currentField]: Number(input.value)
+        })
+        .then(() => {
+            console.log("Document successfully updated!");
+            lastPage = currentPage;
+            currentPage--;
+            displayPage(currentPage);
+        })
+        .catch((error) => {
+            console.error("Error updating document: ", error);
+        });
+        
+    });
+}
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@--- ACTIONS ---@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -401,8 +450,12 @@ function viewUserStats(target, user){
     let signedUp = 0;
     var attended = 0;
     let paid = 0;
+    let charged = 0;
     if (user.data().paid) {
         paid = user.data().paid;
+    }
+    if (user.data().charged) {
+        charged = user.data().charged;
     }
     let name = user.data().firstName;
     // ############### SEANCES
@@ -421,19 +474,6 @@ function viewUserStats(target, user){
         signedUpDIV.innerHTML = `${name} s'est inscrit(e) à <b>${signedUp}</b> séance(s).`;
     });
     target.appendChild(sessionsStats);
-    //€
-    let moneyStats = document.createElement('div');
-    moneyStats.classList.add('statList');
-    let h3_money = document.createElement('h3');
-    h3_money.innerText = "Paiement"
-    moneyStats.appendChild(h3_money);
-    let hourRateDIV = document.createElement('div');
-    hourRateDIV.innerHTML = `Taux horaire :  <b>${HOUR_RATE}0 €</b>`;
-    moneyStats.appendChild(hourRateDIV);
-    let paidDIV = document.createElement('div');
-    paidDIV.innerHTML = `Vous avez payé  <b>${paid} €</b>`;
-    moneyStats.appendChild(paidDIV);
-    target.appendChild(moneyStats);
     // ############### HEURES
     let hoursStats = document.createElement('div');
     hoursStats.classList.add('statList');
@@ -471,8 +511,24 @@ function viewUserStats(target, user){
         
         hoursStats.appendChild(remainingHoursDIV);
         target.appendChild(hoursStats);
+        //€
+    let moneyStats = document.createElement('div');
+    moneyStats.classList.add('statList');
+    let h3_money = document.createElement('h3');
+    h3_money.innerText = "Paiement"
+    moneyStats.appendChild(h3_money);
+    let hourRateDIV = document.createElement('div');
+    hourRateDIV.innerHTML = `Taux horaire :  <b>${HOUR_RATE}0 €</b>`;
+    moneyStats.appendChild(hourRateDIV);
+    let paidDIV = document.createElement('div');
+    paidDIV.innerHTML = `Vous avez payé  <b>${paid} €</b>`;
+    moneyStats.appendChild(paidDIV);
+    let chargedDIV = document.createElement('div');
+    chargedDIV.innerHTML = `Le CAF a encaissé  <b>${charged} €</b>`;
+    moneyStats.appendChild(chargedDIV);
+    target.appendChild(moneyStats);
     });
-
+    
 }
 //========================================= ACTION 3 (signup) =============================
 function signUpPage(target, user){
@@ -577,6 +633,91 @@ function history(target, user){
     target.appendChild(h1);
     target.appendChild(txt);
     displaySessionList(target, true, false, user, "attended", false, false, false, false);
+}
+//========================================= ACTION 8 (money management) =============================
+function moneyManagement(target, user){
+    if (!confirm("Cette opération engendre beaucoup d'activité sur la base de données, merci de ne pas en abuser.")) {
+        return;
+    }
+    if (memoryTable) {
+        target.appendChild(memoryTable);
+    }else{
+        var table = document.createElement('table');
+        let nameCol = document.createElement('th');
+        let attendedCol = document.createElement('th');
+        attendedCol.innerHTML = "Consommé";
+        let paidCol = document.createElement('th');
+        paidCol.innerHTML = "Payé";
+        let chargedCol = document.createElement('th');
+        chargedCol.innerHTML = "Encaissé";
+        let line = document.createElement('tr');
+        line.appendChild(nameCol);
+        line.appendChild(attendedCol);
+        line.appendChild(paidCol);
+        line.appendChild(chargedCol);
+        table.appendChild(line);
+        target.appendChild(table);
+        
+     db.collection('users').orderBy('group').orderBy('firstName').get().then(snapshot=>{
+         snapshot.docs.forEach(user=>{
+            let paid = 0;
+            let charged = 0;
+            if (user.data().paid) {
+                paid = user.data().paid;
+            }
+            if (user.data().charged) {
+                charged = user.data().charged;
+            }
+            let nameCol = document.createElement('td');
+            nameCol.classList.add('name');
+            nameCol.innerHTML = `${user.data().firstName} ${user.data().lastName}`;
+            let paidCol = document.createElement('td');
+            paidCol.classList.add('paid');
+            paidCol.innerHTML = paid + " €";
+            let chargedCol = document.createElement('td');
+            chargedCol.classList.add('charged');
+            chargedCol.innerHTML = charged + " €";
+            let line = document.createElement('tr');
+            line.setAttribute('id', user.id);
+            
+            let attendedCol = document.createElement('td');
+            attendedCol.classList.add('attended');
+            var attendedHours = 0;
+            db.collection('sessions').where('attended', 'array-contains', user.id).get().then(snapshot=>{
+                snapshot.docs.forEach(session=>{
+                    attendedHours += session.data().duration;
+                });
+            }).then(()=>{
+                attendedCol.innerHTML = `${Math.ceil(attendedHours*HOUR_RATE)} €`;
+                if (Math.ceil(attendedHours*HOUR_RATE)>= paid) {
+                    line.style.background = "var(--red10)";
+                }
+            });
+            line.appendChild(nameCol);
+            line.appendChild(attendedCol);
+            line.appendChild(paidCol);
+            line.appendChild(chargedCol);
+            table.appendChild(line);
+            line.addEventListener('click', (e) => {
+                e.stopPropagation();
+                let field = e.target.className;
+                e.target.innerText = "...";
+                memoryTable = table;
+                if (field == "paid" || field == "charged") {
+                    currentUser = user;
+                    currentField = field;
+                    lastPage = currentPage;
+                    currentPage++;
+                    displayPage(currentPage);
+                }            
+            });
+         });
+     }).then(()=>{
+         
+    
+     });
+    }
+    
 }
 //########################################## GENERIC FUNCTIONS ######################################
 
@@ -959,7 +1100,6 @@ function getAllSessions(past, future, ageRestriction){//returns array of session
                     var minAge = session.data().minAge;
                     var maxAge = session.data().maxAge;
                     if (roundedAge >= minAge && age <= maxAge) {
-                        console.log(age);
                         resultArray.push(session);
                     }else{
                         console.log("Trop petit ou trop grand");

@@ -204,5 +204,25 @@ li.selected button{
     display: none !important;
 }
 
+table{
+    border-collapse: collapse;
+}
+th{
+    padding: 10px;
+    font-size: 10px;
+}
+td{
+    padding: 10px;
+    cursor: pointer;
+    border-top: 1px solid black;
+}
+td.paid{
+    text-align: center;
+    background: var(--green10);
+}
+td.charged{
+    text-align: center;
+    background: var(--primary30);
+}
 
 
