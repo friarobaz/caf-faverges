@@ -635,12 +635,27 @@ function history(target, user){
     displaySessionList(target, true, false, user, "attended", false, false, false, false);
 }
 //========================================= ACTION 8 (money management) =============================
-function moneyManagement(target, user){
-    if (!confirm("Cette opération engendre beaucoup d'activité sur la base de données, merci de ne pas en abuser.")) {
+function moneyManagement(target){
+    if (forward && !confirm("Cette opération engendre beaucoup d'activité sur la base de données, merci de ne pas en abuser.")) {
         return;
     }
     if (memoryTable) {
         target.appendChild(memoryTable);
+        var aTags = document.getElementsByTagName("td");
+        var searchText = "...";
+        var found;
+
+        for (var i = 0; i < aTags.length; i++) {
+        if (aTags[i].textContent == searchText) {
+            found = aTags[i];
+            let userId = found.parentNode.id;
+            let field = found.className;
+            db.collection('users').doc(userId).get().then(user=>{
+                found.innerText = user.data()[field] + " €";
+            });
+            break;
+        }
+        }
     }else{
         var table = document.createElement('table');
         let nameCol = document.createElement('th');
