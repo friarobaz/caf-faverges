@@ -651,7 +651,7 @@ function moneyManagement(target){
             let userId = found.parentNode.id;
             let field = found.className;
             db.collection('users').doc(userId).get().then(user=>{
-                found.innerText = user.data()[field] + " €";
+                found.innerText = user.data()[field] + " €";
             });
             break;
         }
@@ -688,10 +688,10 @@ function moneyManagement(target){
             nameCol.innerHTML = `${user.data().firstName} ${user.data().lastName}`;
             let paidCol = document.createElement('td');
             paidCol.classList.add('paid');
-            paidCol.innerHTML = paid + " €";
+            paidCol.innerHTML = paid + " €";
             let chargedCol = document.createElement('td');
             chargedCol.classList.add('charged');
-            chargedCol.innerHTML = charged + " €";
+            chargedCol.innerHTML = charged + " €";
             let line = document.createElement('tr');
             line.setAttribute('id', user.id);
             
@@ -1154,7 +1154,7 @@ function getTiming(session){
         return `${getSimpleTime(A)} à ${getSimpleTime(B)}`
     }
 }
-function delSessions(){
+/* function delSessions(){
     db.collection("sessions")
     .get()
     .then(res => {
@@ -1164,7 +1164,7 @@ function delSessions(){
         }
         });
     });
-}
+} */
 function userSignedUp(user, session){
     if (session.data().signedUp) {
         if (session.data().signedUp.indexOf(user.id)>-1) {
