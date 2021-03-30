@@ -716,15 +716,15 @@ function moneyManagement(target){
             line.addEventListener('click', (e) => {
                 e.stopPropagation();
                 let field = e.target.className;
-                e.target.innerText = "...";
-                memoryTable = table;
                 if (field == "paid" || field == "charged") {
+                    memoryTable = table;
+                    e.target.innerText = "...";
                     currentUser = user;
                     currentField = field;
                     lastPage = currentPage;
                     currentPage++;
                     displayPage(currentPage);
-                }            
+                }             
             });
          });
      }).then(()=>{
@@ -1185,7 +1185,7 @@ function userAttended(userId, session){
 }
 // TO DO
 /*
-LIMITE DE NOMBRE DE PAX PAR SEANCE
+UNE SEANCE PAR JOUR
 */
 
 
