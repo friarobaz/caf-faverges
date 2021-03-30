@@ -1,6 +1,6 @@
 dayjs.locale('fr');
 const HOURS_PER_DAY = 8;
-const SESSION_DISPLAY_LIMIT = 20;
+const SESSION_DISPLAY_LIMIT = 40;
 const SHOW_PAST = false; //default is FALSE
 const HOUR_RATE = 4.6;
 const TEACHERS = ['Jelena', 'Jules'];
