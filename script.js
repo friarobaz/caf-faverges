@@ -63,7 +63,6 @@ function displayPage(pageNumber){
     MAIN.appendChild(section);
     PAGES[pageNumber](section, currentUser);
     createBackButton(MAIN);
-    
 }
 //========================================= PAGE 0 (userType selection) =========================
 function userTypeSelection(target){
@@ -180,6 +179,7 @@ function createNameList(target){
     target.appendChild(input);
     target.appendChild(ul);
     input.focus();
+
     db.collection('users').orderBy('firstName').get().then(snapshot => {
         snapshot.docs.forEach(doc => {
             let li = document.createElement("li");
@@ -549,7 +549,11 @@ function signUpPage(target, user){
 function signUp(user, session){
     console.log(`Signing up ${currentUser.data().firstName} to ${session.data().startDate}`);
     return db.collection('sessions').doc(session.id).update({
-        signedUp: firebase.firestore.FieldValue.arrayUnion(user.id)
+        signedUp: firebase.firestore.FieldValue.arrayUnion(user.id),
+        signedUpNames: firebase.firestore.FieldValue.arrayUnion(`${user.data().firstName} ${user.data().lastName}`)
+    })
+    .then(() => {
+        console.log("Document successfully updated!");
     })
     .then(() => {
         console.log("Document successfully updated!");
@@ -561,7 +565,8 @@ function signUp(user, session){
 function unSignUp (user, session){
     console.log(`UnSigning up ${currentUser.data().firstName} to ${session.data().startDate}`);
     return db.collection('sessions').doc(session.id).update({
-        signedUp: firebase.firestore.FieldValue.arrayRemove(user.id)
+        signedUp: firebase.firestore.FieldValue.arrayRemove(user.id),
+        signedUpNames: firebase.firestore.FieldValue.arrayRemove(`${user.data().firstName} ${user.data().lastName}`)
     })
     .then(() => {
         console.log("Document successfully updated!");
@@ -572,11 +577,9 @@ function unSignUp (user, session){
 }
 //========================================= ACTION 4 (view global stats) =============================
 function viewGlobalStats(){
-
 }
 //========================================= ACTION 5 (bill) =============================
 function bill(){
-    
 }
 //========================================= ACTION 6 (point) =============================
 function point(target){
@@ -839,34 +842,38 @@ function displaySession(session, ul, showSignUp, showUnSignUp, showPoint, showCa
     usersTitle.style.fontWeight = 'bold';
     usersTitle.style.marginBottom = '10px';
     let userList = document.createElement('ul');
+    
     signedUpUsers.forEach(userId =>{
-        let li = document.createElement('li');
+        var li = document.createElement('li');
         li.setAttribute('class', userId);
-        
-        db.collection('users').doc(userId).get().then(doc =>{
-            if (currentUserType == 2 && session.data().startTimestamp <= Date.now()) {
-                if (attendedUsers.indexOf(userId)>-1) {
+
+        if (currentUserType == 2 && session.data().startTimestamp <= Date.now()) {
+            if (attendedUsers.indexOf(userId)>-1) { //if user attended
+                let circle = document.createElement('span');
+                circle.classList.add('attendedCircle');
+                li.appendChild(circle);
+            }else{ //if user didn't attend
+                if (attendedUsers.length>0) { //if other attened
                     let circle = document.createElement('span');
-                    circle.classList.add('attendedCircle');
+                    circle.classList.add('missedCircle');
                     li.appendChild(circle);
-                }else{
-                    if (attendedUsers.length>0) {
-                        let circle = document.createElement('span');
-                        circle.classList.add('missedCircle');
-                        li.appendChild(circle);
-                    }else{
-                        /* let circle = document.createElement('span');
-                        circle.classList.add('notPointedCircle');
-                        li.appendChild(circle); */
-                    }  
-                }
+                }else{ //if nobody attended
+                    /* let circle = document.createElement('span');
+                    circle.classList.add('notPointedCircle');
+                    li.appendChild(circle); */
+                }  
             }
-            li.innerHTML += doc.data().firstName + " " + doc.data().lastName;
-            userList.appendChild(li);
-        }).then(()=>{
-           
-        });
-    })
+        }
+        db.collection('admin').doc('userNames').get().then(doc=>{
+            //console.log(doc.data()[userId])
+            li.innerHTML += doc.data()[userId];
+        })
+        
+        userList.appendChild(li);
+        
+        
+        
+    }); 
     
     let signUpButton = document.createElement('button');
     signUpButton.innerText = "S'inscrire";
@@ -1179,10 +1186,69 @@ function userAttended(userId, session){
         }
     }
 }
+
+function updateNameList(){
+    db.collection('users').orderBy('firstName').get().then(snapshot=>{
+        return db.collection('admin').doc('userNames').update({
+            created:firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .then(() => {
+            snapshot.docs.forEach(user=>{
+                return db.collection('admin').doc('userNames').update({
+                    [user.id]:`${user.data().firstName} ${user.data().lastName}`
+                })
+                .then(() => {
+                    console.log("Document successfully updated!");
+                })
+                .catch((error) => {
+                    console.error("Error updating document: ", error);
+                });
+            })
+        })
+        .catch((error) => {
+            console.error("Error updating document: ", error);
+        });
+    })
+}
+
+/* function test(){
+    db.collection("sessions").get().then(snapshot=>{
+        snapshot.docs.forEach(session=>{
+            session.data().signedUp.forEach(userId=>{
+                db.collection('users').doc(userId).get().then(user=>{
+                    return db.collection('sessions').doc(session.id).update({
+                        signedUpNames: firebase.firestore.FieldValue.arrayUnion(`${user.data().firstName} ${user.data().lastName}`)
+                    })
+                    .then(() => {
+                        console.log("Document successfully updated!");
+                    })
+                    .catch((error) => {
+                        console.error("Error updating document: ", error);
+                    });
+                })
+            })
+        })
+    })
+} */
+
+function backup(collection){
+    db.collection(collection).get().then(snapshot=>{
+        snapshot.docs.forEach(doc=>{
+            db.collection(`${collection}_BACKUP`).add(doc.data()).then((docRef) => {
+                console.log("Document written with ID: ", docRef.id);
+            })
+            .catch((error) => {
+                console.error("Error adding document: ", error);
+            });
+        })
+    })
+}
 // TO DO
 /*
+COMPTA DE
 UNE SEANCE PAR JOUR
 OPTIMISER BDD
+
 */
 
 /* function delSessions(){
