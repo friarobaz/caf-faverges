@@ -5,11 +5,17 @@ const SHOW_PAST = false; //default is FALSE
 const HOUR_RATE = 4.6;
 const TEACHERS = ['Jelena', 'Jules'];
 const USER_TYPES = [ // YOU CAN CHANGE NAMES BUT KEEP POSITIONS
-    {name: "Administrateur", password: "admin42", userSelectionNeeded: false}, //can do all actions, keep at position 0 in array
-    {name: "Parent ou élève de l'école d'escalade", password:"userTel", userSelectionNeeded: true, authorizedActions:[3,2,7]},
-    {name: "Moniteur", password: "grigri", userSelectionNeeded: true, authorizedActions:[8]},
-    {name: "Membre du comité directeur du CAF", password: "faverges", userSelectionNeeded: false, authorizedActions:[8]},
+    {name: "Administrateur", password: "", userSelectionNeeded: false}, //can do all actions, keep at position 0 in array
+    {name: "Parent ou élève de l'école d'escalade", password:"", userSelectionNeeded: true, authorizedActions:[3,2,7]},
+    {name: "Moniteur", password: "", userSelectionNeeded: true, authorizedActions:[8]},
+    {name: "Membre du comité directeur du CAF", password: "", userSelectionNeeded: false, authorizedActions:[8]},
 ] 
+db.collection('admin').doc('userTypes').get().then(doc=>{
+    USER_TYPES[0].password = doc.data().admin.password;
+    USER_TYPES[1].password = doc.data().parent.password;
+    USER_TYPES[2].password = doc.data().teacher.password;
+    USER_TYPES[3].password = doc.data().caf.password;
+})
 const ACTIONS = [
     {name: "Créer une séance", function: createSession}, //0
     {name: "Modifier une séance", function: modifySession}, //1
@@ -1154,17 +1160,7 @@ function getTiming(session){
         return `${getSimpleTime(A)} à ${getSimpleTime(B)}`
     }
 }
-/* function delSessions(){
-    db.collection("sessions")
-    .get()
-    .then(res => {
-        res.forEach(element => {
-        if (confirm("sur? ATTENTIONS !")) {
-            element.ref.delete();
-        }
-        });
-    });
-} */
+
 function userSignedUp(user, session){
     if (session.data().signedUp) {
         if (session.data().signedUp.indexOf(user.id)>-1) {
@@ -1186,9 +1182,20 @@ function userAttended(userId, session){
 // TO DO
 /*
 UNE SEANCE PAR JOUR
+OPTIMISER BDD
 */
 
-
+/* function delSessions(){
+    db.collection("sessions")
+    .get()
+    .then(res => {
+        res.forEach(element => {
+        if (confirm("sur? ATTENTIONS !")) {
+            element.ref.delete();
+        }
+        });
+    });
+} */
 
 /* function removeChildren(target){ // unused
     for (let i = 0; i < target.children.length; i++) {
