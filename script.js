@@ -682,8 +682,11 @@ function moneyManagement(target){
         table.appendChild(line);
         target.appendChild(table);
         
-     db.collection('users').orderBy('group').orderBy('firstName').get().then(snapshot=>{
+     db.collection('users').orderBy('firstName').get().then(snapshot=>{
          snapshot.docs.forEach(user=>{
+            if (user.data().dateOfBirth == "adulte") {
+                 return;
+            }
             let paid = 0;
             let charged = 0;
             if (user.data().paid) {
@@ -1245,6 +1248,8 @@ function backup(collection){
 }
 // TO DO
 /*
+impossible de se desinscrire a 48h
+facturer tous les inscrit le jour j
 COMPTA DE
 UNE SEANCE PAR JOUR
 OPTIMISER BDD
