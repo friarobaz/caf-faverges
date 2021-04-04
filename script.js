@@ -471,14 +471,14 @@ function viewUserStats(target, user){
     h3_sessions.innerText = "Séances"
     sessionsStats.appendChild(h3_sessions);
     let signedUpDIV = document.createElement("div");
-    //sessionsStats.appendChild(signedUpDIV)
+    sessionsStats.appendChild(signedUpDIV)
     let attendedDIV = document.createElement("div");
     sessionsStats.appendChild(attendedDIV);
 
-    db.collection('sessions').where('signedUp', 'array-contains', user.id).get().then(snapshot=>{
+    /* db.collection('sessions').where('signedUp', 'array-contains', user.id).get().then(snapshot=>{
         signedUp = snapshot.size;
         signedUpDIV.innerHTML = `${name} s'est inscrit(e) à <b>${signedUp}</b> séance(s).`;
-    });
+    }); */
     target.appendChild(sessionsStats);
     // ############### HEURES
     let hoursStats = document.createElement('div');
@@ -486,27 +486,27 @@ function viewUserStats(target, user){
     let h3_hours = document.createElement('h3');
     h3_hours.innerText = "Heures"
     hoursStats.appendChild(h3_hours);
-    var attendedHours = 0;
-    db.collection('sessions').where('attended', 'array-contains', user.id).get().then(snapshot=>{
-        attended = snapshot.size;
-        attendedDIV.innerHTML = `${name} a participé à <b>${attended}</b> séance(s).`;
+    var signedUpdHours = 0;
+    db.collection('sessions').where('signedUp', 'array-contains', user.id).get().then(snapshot=>{
+        signedUp = snapshot.size;
+        signedUpDIV.innerHTML = `${name} s'est inscrit(e) à <b>${signedUp}</b> séance(s).`;
         snapshot.docs.forEach(session=>{
             let duration = session.data().duration;
             let durationDays = session.data().durationDays;
             if (durationDays > 1) {
                 duration = HOURS_PER_DAY*durationDays;
             }
-            attendedHours += duration;
+            signedUpdHours += duration;
         })
     }).then(()=>{
         let paidHours = Math.ceil(paid/HOUR_RATE);
-        let remainingHours = paidHours - attendedHours;
+        let remainingHours = paidHours - signedUpdHours;
         let paidHoursDIV = document.createElement('div');
         paidHoursDIV.innerHTML = `Vous avez payé pour <b>${paidHours}</b> heures de cours.`;
         hoursStats.appendChild(paidHoursDIV);
-        let attendedHoursDIV = document.createElement('div');
-        attendedHoursDIV.innerHTML = `${name} a pris <b>${attendedHours}</b> heures de cours.`;
-        hoursStats.appendChild(attendedHoursDIV);
+        let signedUpHoursDIV = document.createElement('div');
+        signedUpHoursDIV.innerHTML = `${name} a pris <b>${signedUpdHours}</b> heures de cours.`;
+        hoursStats.appendChild(signedUpHoursDIV);
         let remainingHoursDIV = document.createElement('div');
         if (remainingHours>=0) {
             remainingHoursDIV.innerHTML = `Il lui reste <b>${remainingHours}</b> heures de cours.`;
@@ -551,9 +551,6 @@ function signUp(user, session){
     return db.collection('sessions').doc(session.id).update({
         signedUp: firebase.firestore.FieldValue.arrayUnion(user.id),
         signedUpNames: firebase.firestore.FieldValue.arrayUnion(`${user.data().firstName} ${user.data().lastName}`)
-    })
-    .then(() => {
-        console.log("Document successfully updated!");
     })
     .then(() => {
         console.log("Document successfully updated!");
@@ -709,14 +706,14 @@ function moneyManagement(target){
             
             let attendedCol = document.createElement('td');
             attendedCol.classList.add('attended');
-            var attendedHours = 0;
+            var signedUpdHours = 0;
             db.collection('sessions').where('attended', 'array-contains', user.id).get().then(snapshot=>{
                 snapshot.docs.forEach(session=>{
-                    attendedHours += session.data().duration;
+                    signedUpdHours += session.data().duration;
                 });
             }).then(()=>{
-                attendedCol.innerHTML = `${Math.ceil(attendedHours*HOUR_RATE)} €`;
-                if (Math.ceil(attendedHours*HOUR_RATE)>= paid) {
+                attendedCol.innerHTML = `${Math.ceil(signedUpdHours*HOUR_RATE)} €`;
+                if (Math.ceil(signedUpdHours*HOUR_RATE)>= paid) {
                     line.style.background = "var(--red10)";
                 }
             });
@@ -919,9 +916,9 @@ function displaySession(session, ul, showSignUp, showUnSignUp, showPoint, showCa
             unSignUpButton.style.display = '';
         }
     }
-    if (showUnSignUp && (session.data().startTimestamp > Date.now() || SHOW_PAST)) {
-        unSignUpButton.style.display = '';
-    }
+    /* if (showUnSignUp && (session.data().startTimestamp > (Date.now()+172800000) || SHOW_PAST)) { //disabled unSignUp 48 hours before
+        //unSignUpButton.style.display = '';
+    } */
     if (showPoint && session.data().startTimestamp <= Date.now()) {
         pointButton.style.display = '';
     }
@@ -949,7 +946,7 @@ function displaySession(session, ul, showSignUp, showUnSignUp, showPoint, showCa
     if (userSignedUp(currentUser, session)) {
         li.classList.add('signedUp');
         signUpButton.style.display = 'none';
-        if (session.data().startTimestamp > Date.now()) {
+        if (session.data().startTimestamp > (Date.now()+172800000)) {
             unSignUpButton.style.display = '';
         }     
     }
@@ -966,7 +963,9 @@ function displaySession(session, ul, showSignUp, showUnSignUp, showPoint, showCa
         signUp(currentUser, session);
         li.classList.add('signedUp');
         signUpButton.style.display = 'none';
-        unSignUpButton.style.display = '';
+        if (session.data().startTimestamp > (Date.now()+172800000)) {
+            unSignUpButton.style.display = '';
+        }   
         let tmpUserName = document.createElement('li');
         tmpUserName.textContent = currentUser.data().firstName +" "+currentUser.data().lastName;
         tmpUserName.setAttribute('class', currentUser.id);
@@ -1248,7 +1247,6 @@ function backup(collection){
 }
 // TO DO
 /*
-impossible de se desinscrire a 48h
 facturer tous les inscrit le jour j
 COMPTA DE
 UNE SEANCE PAR JOUR
