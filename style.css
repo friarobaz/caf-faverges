@@ -1,228 +1,223 @@
 :root {
-    --primary: rgba(2,94,185,1);
-    --primary60: rgba(2,94,185,0.6);
-    --primary30: rgba(2,94,185,0.3);
-    --primary10: rgba(61, 94, 128, 0.1);
-    --green: rgb(72, 143, 2);
-    --green10: rgba(72, 143, 2, 0.5);
-    --red: rgb(209, 31, 0);
-    --red10: rgba(209, 31, 0, 0.5);
-    --grey: rgba(100, 100, 100, 0.2);
-    --yellow: rgba(255, 208, 0, 1);
-  }
-
-*{
-    box-sizing: border-box;
+  --primary: rgba(2, 94, 185, 1);
+  --primary60: rgba(2, 94, 185, 0.6);
+  --primary30: rgba(2, 94, 185, 0.3);
+  --primary10: rgba(61, 94, 128, 0.1);
+  --green: rgb(72, 143, 2);
+  --green10: rgba(72, 143, 2, 0.5);
+  --red: rgb(209, 31, 0);
+  --red10: rgba(209, 31, 0, 0.5);
+  --grey: rgba(100, 100, 100, 0.2);
+  --yellow: rgba(255, 208, 0, 1);
 }
 
-body{
-    margin: 0;
-    padding: 20px;
-    background: rgb(233, 233, 233);
-    font-size: 1em;
-    font-family: sans-serif;
-    overflow-x: hidden;
-}
-#main{
-    margin: 0 auto;
-    max-width: 500px;
-}
-section{
-    width: 100%;
-    /* border: 1px solid black; */
-    padding: 0;
-}
-h1{
-   margin-top: 30px;
-   margin-bottom: 30px;
+* {
+  box-sizing: border-box;
 }
 
-li button{
-    background: none;
-    padding: 20px;
-    text-transform: uppercase;
-    margin-bottom: 20px;
+body {
+  margin: 0;
+  padding: 20px;
+  background: rgb(233, 233, 233);
+  font-size: 1em;
+  font-family: sans-serif;
+  overflow-x: hidden;
 }
-li button:hover{
-    background: var(--primary10);
+#main {
+  margin: 0 auto;
+  max-width: 500px;
 }
-
-button{
-    color: var(--primary);
-    padding: 10px;
-    margin-right: 20px;
-    border: 2px solid var(--primary);
-    cursor: pointer;
-    font-size: 1em;
-    width: 100%;
-    outline:none;
+section {
+  width: 100%;
+  /* border: 1px solid black; */
+  padding: 0;
 }
-
-#backButton{
-    background: var(--primary);
-    color: white;
-    padding: 20px;
-    text-transform: uppercase;
-    margin-top: 30px;
+h1 {
+  margin-top: 30px;
+  margin-bottom: 30px;
 }
 
-input{
-    font-size: 1.2em;
-    padding: 20px;
-    border: 0;
-    margin-bottom: 30px;
-    width: 100%;
+li button {
+  background: none;
+  padding: 20px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+li button:hover {
+  background: var(--primary10);
 }
 
-ul{
-    margin: 0;
-    padding: 0;
+button {
+  color: var(--primary);
+  padding: 10px;
+  margin-right: 20px;
+  border: 2px solid var(--primary);
+  cursor: pointer;
+  font-size: 1em;
+  width: 100%;
+  outline: none;
 }
 
-li{
-    list-style: none;
-    
-    padding: 0;;
-    font-size: 1em;
-    /* background: yellowgreen;
+#backButton {
+  background: var(--primary);
+  color: white;
+  padding: 20px;
+  text-transform: uppercase;
+  margin-top: 30px;
+}
+
+input {
+  font-size: 1.2em;
+  padding: 20px;
+  border: 0;
+  margin-bottom: 30px;
+  width: 100%;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+}
+
+li {
+  list-style: none;
+
+  padding: 0;
+  font-size: 1em;
+  /* background: yellowgreen;
     border: 1px solid red; */
-    width: 100%;
+  width: 100%;
 }
 
-li.selected button{
-    
-    color: black;
-    background: var(--green10);
-    border: 2px solid var(--green);
+li.selected button {
+  color: black;
+  background: var(--green10);
+  border: 2px solid var(--green);
 }
 
-.dateText{
-    margin-top: 20px;
-    font-size: 1.2em;
-    font-weight: bold;
+.dateText {
+  margin-top: 20px;
+  font-size: 1.2em;
+  font-weight: bold;
 }
-.session{
-    margin-top: 5px;
-}
-
-
-.session.signedUp .bottom{
-    border-color: var(--green10);
-}
-.session.signedUp .top{
-    background: var(--green10);
-}
-.signUpButton{
-    color: var(--green);
-    border-color: var(--green);
-}
-.unSignUpButton, .cancelButton{
-    color: var(--red);
-    border-color: var(--red);
-}
-.session button{
-    margin: 5px;
-    font-size: 0.8em;
-    padding: 10px;
-}
-.session .top{
-    background: var(--primary30);
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    cursor: pointer;
-}
-.session .bottom{
-    padding: 0.5em;
-    border: 4px solid var(--primary30);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto;
-}
-.session.past .bottom{
-    
-    border: 4px solid var(--yellow);
-}
-.session.past .top{
-    
-    background: var(--yellow);
-}
-.session.pointed .bottom{
-    border-color: var(--green10);
-}
-.session.pointed .top{
-    background-color: var(--green10);
-}
-.session.canceled .bottom{
-    border-color: var(--red10);
-}
-.session.canceled .top{
-    background-color: var(--red10);
-}
-#sessionList h3{
-    margin-bottom: 0;
+.session {
+  margin-top: 5px;
 }
 
-.attendedCircle{
-    background: var(--green);
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 10px;
+.session.signedUp .bottom {
+  border-color: var(--green10);
 }
-.missedCircle{
-    background: var(--red);
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 10px;
+.session.signedUp .top {
+  background: var(--green10);
 }
-.notPointedCircle{
-    background: var(--yellow);
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 10px;
+.signUpButton {
+  color: var(--green);
+  border-color: var(--green);
+}
+.unSignUpButton,
+.cancelButton {
+  color: var(--red);
+  border-color: var(--red);
+}
+.session button {
+  margin: 5px;
+  font-size: 0.8em;
+  padding: 10px;
+}
+.session .top {
+  background: var(--primary30);
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  cursor: pointer;
+}
+.session .bottom {
+  padding: 0.5em;
+  border: 4px solid var(--primary30);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto;
+}
+.session.past .bottom {
+  border: 4px solid var(--yellow);
+}
+.session.past .top {
+  background: var(--yellow);
+}
+.session.pointed .bottom {
+  border-color: var(--green10);
+}
+.session.pointed .top {
+  background-color: var(--green10);
+}
+.session.canceled .bottom {
+  border-color: var(--red10);
+}
+.session.canceled .top {
+  background-color: var(--red10);
+}
+#sessionList h3 {
+  margin-bottom: 0;
 }
 
-.hidden{
-    display: none !important;
+.attendedCircle {
+  background: var(--green);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 10px;
+}
+.missedCircle {
+  background: var(--red);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 10px;
+}
+.notPointedCircle {
+  background: var(--yellow);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 10px;
 }
 
-.statList div{
-    margin-bottom: 10px;
+.hidden {
+  display: none !important;
+}
+
+.statList div {
+  margin-bottom: 10px;
 }
 
 /* div{
     border: 1px solid black;
 } */
 
-.disabled{
-    display: none !important;
+.disabled {
+  display: none !important;
 }
 
-table{
-    border-collapse: collapse;
+table {
+  border-collapse: collapse;
 }
-th{
-    padding: 10px;
-    font-size: 10px;
+th {
+  padding: 10px;
+  font-size: 10px;
 }
-td{
-    padding: 10px;
-    cursor: pointer;
-    border-top: 1px solid black;
+td {
+  padding: 10px;
+  cursor: pointer;
+  border-top: 1px solid black;
 }
-td.paid{
-    text-align: center;
-    background: var(--green10);
+td.paid {
+  text-align: center;
+  background: var(--green10);
 }
-td.charged{
-    text-align: center;
-    background: var(--primary30);
+td.charged {
+  text-align: center;
+  background: var(--primary30);
 }
-
-
